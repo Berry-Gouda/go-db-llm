@@ -1,0 +1,74 @@
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr 3fr;
+    grid-template-rows: auto auto auto;
+    gap: 20px;
+    padding: 20px;
+    align-items: start;
+}
+
+.outlined-1-col{
+    justify-content: center; 
+    align-items: center;
+}
+
+.outlined-1-col tr{
+    padding-left: 5px;
+}
+
+#db-overview {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center; /* Optional, helps center table headings */
+    max-width: 350px;
+    grid-column:1;
+    grid-row-start: 1;
+    grid-row-end: 2;
+}
+
+#selected-t-overview{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center; /* Optional, helps center table headings */
+    grid-column:2;
+    grid-row-start: 1;
+    grid-row-end: 2;
+    max-width: 450px;
+}
+
+#search-bar-div{
+    grid-column:3;
+    grid-row: 1;
+    align-items: center;
+    justify-items: center;
+    margin: auto
+}
+
+#search-bar-div input{
+    width: 500px;
+    height: 75px;
+    font-size: x-large;
+    margin-right: 20px;
+}
+
+
+
+#button-div{
+    display:flex;
+    grid-column: 3;
+    grid-row: 2;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+}
+
+button{
+    max-width: 200px;
+    height: 33%;
+    font-size: larger;
+    padding: 20px
+}
+
