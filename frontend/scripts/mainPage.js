@@ -1,6 +1,8 @@
 let selectedTable = ''
 let selectedColumn = ''
 let totalData
+let isSearch = false
+let sResults = null
 
 document.addEventListener("DOMContentLoaded", async() => {
     try{
@@ -194,10 +196,37 @@ function SetButtonListeners(){
     const sLLM = document.getElementById("sLLM");
     const cLLM = document.getElementById("cLLM");
     const opg = document.getElementById("opg");
+    const search = document.getElementById("search");
 
-    t20.addEventListener("click", ShowResults());
-    bi.addEventListener("click", BulkInsert());
-    sLLM.addEventListener("click", StartLLM());
-    cLLM.addEventListener("click", CloseLLM());
-    opg.addEventListener("click", OpenPromptWindow());
+    t20.addEventListener("click", ShowResults);
+    bi.addEventListener("click", BulkInsert);
+    sLLM.addEventListener("click", StartLLM);
+    cLLM.addEventListener("click", CloseLLM);
+    opg.addEventListener("click", OpenPromptWindow);
+}
+
+function ShowResults(){
+    window.electronAPI.openResults(sResults ?   data = {results: sResults, 
+                                                        schema: totalData.tableSchema[selectedTable], 
+                                                        isSearch: isSearch} : 
+                                                data = {results: totalData.top20[selectedTable],
+                                                        schema: totalData.tableSchema[selectedTable], 
+                                                        isSearch: isSearch})
+}
+
+async function BulkInsert(){
+    const msg = await window.electronAPI.bulkInsert(selectedTable);
+    alert(msg.message);
+}
+
+function StartLLM(){
+
+}
+
+function CloseLLM(){
+
+}
+
+function OpenPromptWindow(){
+
 }

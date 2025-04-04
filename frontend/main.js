@@ -37,7 +37,7 @@ function start(){
     win.loadFile(basePath + "index.html");
 }
 
-ipcMain.on("submitCreds", (event, data) => {
+ipcMain.on("submit-creds", (event, data) => {
     const parsed = JSON.parse(data);
     if(parsed.save){
         store.set('user', parsed.user);
@@ -63,7 +63,7 @@ ipcMain.on("submitCreds", (event, data) => {
     createDBConnection();
 });
 
-ipcMain.on("loadCreds", (event) => {
+ipcMain.on("load-creds", (event) => {
     loadCreds();
     buildGoURL();
     createDBConnection();
@@ -119,7 +119,7 @@ async function createDBConnection(){
 
         if (parsed.success) {
             console.log("Connected");
-            win.loadFile(basePath + "/main.html")
+            win.loadFile(basePath + "main.html")
         } else {
             console.log("Failed To Connect To DB");
         }
@@ -129,7 +129,7 @@ async function createDBConnection(){
     }
 }
 
-ipcMain.handle("loadMain",  async()=>{
+ipcMain.handle("load-main",  async()=>{
     
     url = baseURL + "load-main"
     const response = await fetch(url, {
@@ -144,3 +144,54 @@ ipcMain.handle("loadMain",  async()=>{
     return data;
 
 })
+
+ipcMain.on("open-results", (event, data) => {
+    resultsWin = new BrowserWindow({
+        width: 1000,
+        height: 1000,
+        webPreferences:{
+            preload: path.join(__dirname, "preload.js"),
+            nodeIntegration: false,
+        }
+    });
+
+    console.log(basePath + "searchResults.html")
+
+    resultsWin.loadFile(basePath + "searchResults.html")
+
+    resultsWin.webContents.on("did-finish-load", () => {
+        resultsWin.webContents.send("results-data", data);
+    });
+})
+
+ipcMain.handle("bulk-insert", async(event, table) => {
+    let filePath = null;
+
+    if (win) {
+        const result = await dialog.showOpenDialog(win, {
+            properties: ['openFile'],
+            filters: [{ extensions: ["csv"] }]
+        });
+
+        if (result.canceled || result.filePaths.length === 0) {
+            console.log("User canceled file selection.");
+            return; // or send a cancellation response
+        }
+
+        filePath = result.filePaths[0];
+    }
+
+    const response = await fetch(baseURL + "bulk-insert", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            file: filePath,
+            table: table
+        }),
+    });
+
+    const data = await response.json();
+    return {message: data.message};
+});
