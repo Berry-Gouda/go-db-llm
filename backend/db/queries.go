@@ -3,6 +3,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"reflect"
+	"strings"
 )
 
 func GetDBTableNames(db *sql.DB) ([]string, error) {
@@ -136,4 +138,117 @@ func GetTopRows(db *sql.DB, table string, count int) ([]map[string]string, error
 	}
 
 	return topRows, nil
+}
+
+func GetTableSchemaForDynamicStruct(db *sql.DB, tName string) (map[string]string, error) {
+	query := `
+		SELECT COLUMN_NAME, DATA_TYPE
+		FROM INFORMATION_SCHEMA.COLUMNS
+		WHERE TABLE_NAME = ?
+		ORDER BY ORDINAL_POSITION`
+
+	rows, err := db.Query(query, tName)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	schema := make(map[string]string)
+	for rows.Next() {
+		var columnName, dataType string
+		if err := rows.Scan(&columnName, &dataType); err != nil {
+			return nil, err
+		}
+		schema[columnName] = dataType
+	}
+
+	return schema, nil
+}
+
+// BulkInsert preforms a bulk insert operation on a table.
+func BulkInsert(db *sql.DB, tName string, data []interface{}, structType reflect.Type) error {
+
+	batchSize := 1000
+
+	if len(data) == 0 {
+		return fmt.Errorf("no records to insert")
+	}
+
+	columnOrder, err := getColumnOrder(db, tName)
+	if err != nil {
+		return err
+	}
+
+	numCols := len(columnOrder)
+	numRows := len(data)
+
+	for start := 0; start < numRows; start += batchSize {
+		end := start + batchSize
+		if end > numRows {
+			end = numRows
+		}
+
+		rowPlaceholders := make([]string, end-start)
+
+		for i := range rowPlaceholders {
+			rowPlaceholders[i] = "(" + strings.Repeat("?,", numCols)[:(numCols*2)-1] + ")"
+		}
+
+		placeholders := strings.Join(rowPlaceholders, ", ")
+
+		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES %s",
+			tName, strings.Join(columnOrder, ", "), placeholders)
+
+		var values []interface{}
+		for _, record := range data[start:end] {
+			recordValue := reflect.ValueOf(record)
+
+			for _, column := range columnOrder {
+				field := recordValue.FieldByName(ConvertToCamelCase(column))
+				if field.IsValid() {
+					values = append(values, field.Interface())
+				} else {
+					values = append(values, nil)
+				}
+			}
+		}
+
+		stmt, err := db.Prepare(query)
+		if err != nil {
+			return err
+		}
+
+		_, err = stmt.Exec(values...)
+		if err != nil {
+			stmt.Close()
+			return err
+		}
+		stmt.Close()
+	}
+	return err
+}
+
+func getColumnOrder(db *sql.DB, tName string) ([]string, error) {
+
+	query := fmt.Sprintf(`
+		SELECT COLUMN_NAME
+		FROM INFORMATION_SCHEMA.COLUMNS
+		WHERE TABLE_NAME = '%s'
+		ORDER BY ORDINAL_POSITION`, tName)
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	var columns []string
+	for rows.Next() {
+		var columnName string
+		if err := rows.Scan(&columnName); err != nil {
+			return nil, err
+		}
+		columns = append(columns, columnName)
+	}
+
+	return columns, nil
 }

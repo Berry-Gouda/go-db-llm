@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go-db-llm/db"
 	"net/http"
+	"path/filepath"
 )
 
 var MainData = &db.MainPageInfo{}
@@ -76,4 +77,39 @@ func HandleLoadMainPage(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(MainData)
+}
+
+func HandleBulkInsert(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req db.BulkInsertRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if err != nil {
+		http.Error(w, "Invalid JSON data", http.StatusBadRequest)
+		return
+	}
+
+	if req.File == "" {
+		http.Error(w, "Missing 'file' parameter", http.StatusBadRequest)
+		return
+	}
+
+	if filepath.Ext(req.File) != ".csv" {
+		http.Error(w, "Must be a CSV file", http.StatusBadRequest)
+		return
+	}
+
+	mssg, err := db.DBPrepareBulkInsert(req.File, req.Table)
+	if err != nil {
+		fmt.Println("Error:", err)
+	}
+
+	response := map[string]string{
+		"message": mssg,
+	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
 }

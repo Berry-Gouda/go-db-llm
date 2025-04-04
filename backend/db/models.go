@@ -1,5 +1,14 @@
 package db
 
+import (
+	"fmt"
+	"reflect"
+	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+)
+
 type DBConnInfo struct {
 	User   string `json:"user"`
 	Pass   string `json:"pass"`
@@ -16,9 +25,53 @@ type TableSchemaInfo struct {
 	ColDefault string
 }
 
+type SearchResults struct {
+	Results []map[string]string `json:"results"`
+}
+
 type MainPageInfo struct {
 	DBName        string                         `json:"dbName"`
 	TableOverview map[string]uint32              `json:"tablesOverview"`
 	TableSchema   map[string][]TableSchemaInfo   `json:"tableSchema"`
 	Top20Rows     map[string][]map[string]string `json:"top20"`
+}
+
+type BulkInsertRequest struct {
+	File  string `json:"file"`
+	Table string `json:"table"`
+}
+
+// CreateDynamicStruct creates a struct based on a table's schema.
+func CreateDynamicStruct(schema map[string]string) reflect.Type {
+	var fields []reflect.StructField
+
+	for col, dtype := range schema {
+		var fieldType reflect.Type
+
+		switch dtype {
+		case "int", "bigint", "int unsigned":
+			fieldType = reflect.TypeOf(int(0))
+		case "float", "double", "decimal":
+			fieldType = reflect.TypeOf(float64(0))
+		case "varchar", "text":
+			fieldType = reflect.TypeOf("")
+		default:
+			fieldType = reflect.TypeOf(interface{}(nil))
+		}
+		fields = append(fields, reflect.StructField{
+			Name: ConvertToCamelCase(col),
+			Type: fieldType,
+			Tag:  reflect.StructTag(fmt.Sprintf(`json:"%s"`, col)),
+		})
+	}
+	return reflect.StructOf(fields)
+}
+
+// ConvertToCamelCase Converts a table name into the correct format for a go struct.
+func ConvertToCamelCase(input string) string {
+	parts := strings.Split(input, "_")
+	for i := range parts {
+		parts[i] = cases.Title(language.Und).String(parts[i])
+	}
+	return strings.Join(parts, "")
 }
