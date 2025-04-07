@@ -1,10 +1,11 @@
-const { app, BrowserWindow, ipcMain } = require("electron");
+const { app, BrowserWindow, ipcMain, IpcMainServiceWorker } = require("electron");
 const Store = require('electron-store').default;
 const store = new Store({name: 'creds'});
 const {dialog} = require("electron");
 const path = require("path");
 
 let win;
+let aiWindow;
 let basePath = "./templates/"
 
 let user = "";
@@ -195,3 +196,33 @@ ipcMain.handle("bulk-insert", async(event, table) => {
     const data = await response.json();
     return {message: data.message};
 });
+
+IpcMain.handle("send-search", async(event, data) =>{
+    url = baseURL + "comp-column-search";
+    const respons = await fetch(url, {
+        method: "POST",
+        headers:{
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    });
+
+    const results = await response.json();
+    return {results}
+})
+
+ipcMain.handle("start-llm", async (event)=>{
+    url = baseURL + "start-llm"
+    aiWindow = new BrowserWindow({
+        width: 1200,
+        height: 1000,
+        webPreferences:{
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, "preload.js")
+        }
+    })
+    aiWindow.loadFile(path.join(basePath, "loading.html"))
+
+    //This is where we would finish fully loading the Model Front end.
+})

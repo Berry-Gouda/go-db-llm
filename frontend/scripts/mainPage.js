@@ -148,37 +148,6 @@ function ClearSelectedTableSchema(){
     tBody.replaceChildren();
 }
 
-function DisplaySearchResults(table, isSearch, results){
-    console.log("DisplaySearch")
-    const tH3 = document.querySelector("#search-results h3");
-    const thead = document.querySelector("#search-table thead");
-    const tbody = document.querySelector("#search-table tbody");
-    const columns = []
-
-    tH3.textContent = isSearch ? "Search Results" : "Top 20 Rows";
-
-    Object.entries(totalData.tableSchema[table]).forEach(([_, colInfo]) => {
-        const headerCell = document.createElement('th');
-        headerCell.textContent = colInfo.ColName;
-        columns.push(colInfo.ColName);
-        thead.appendChild(headerCell);
-    });
-
-    console.log(results)
-
-    results.forEach(row => {
-        const tr = document.createElement('tr');
-
-        columns.forEach(col => {
-            const td = document.createElement('td');
-            td.textContent = row[col] ?? "";
-            tr.appendChild(td);
-        });
-
-        tbody.appendChild(tr);
-    });
-}
-
 function ClearSearchResults(){
     console.log("clearSearch")
     const tH3 = document.querySelector("#search-results h3");
@@ -203,6 +172,7 @@ function SetButtonListeners(){
     sLLM.addEventListener("click", StartLLM);
     cLLM.addEventListener("click", CloseLLM);
     opg.addEventListener("click", OpenPromptWindow);
+    search.addEventListener("click", SendSearch);
 }
 
 function ShowResults(){
@@ -219,8 +189,21 @@ async function BulkInsert(){
     alert(msg.message);
 }
 
-function StartLLM(){
+async function SendSearch(){
+    const input = document.getElementById("search-input");
+    const searchVal = input.value
+    const data = {
+        table: selectedTable,
+        compColumn: selectedColumn,
+        searchVal: searchVal,
+    };
 
+    const results = await window.electronAPI.sendSearch(data);
+    console.log(results);
+}
+
+function StartLLM(){
+    window.electronAPI.startLLM();
 }
 
 function CloseLLM(){

@@ -163,3 +163,38 @@ func openCSV(structType reflect.Type, path string) ([]interface{}, error) {
 
 	return result, nil
 }
+
+func ParseRows(rows *sql.Rows, columnNames []string) ([]map[string]string, error) {
+
+	var parsedRows []map[string]string
+
+	for rows.Next() {
+		values := make([]interface{}, len(columnNames))
+		valuePtrs := make([]interface{}, len(columnNames))
+
+		for i := range values {
+			valuePtrs[i] = &values[i]
+		}
+
+		if err := rows.Scan(valuePtrs...); err != nil {
+			return nil, err
+		}
+
+		rowMap := make(map[string]string)
+		for i, col := range columnNames {
+			var val string
+			if b, ok := values[i].([]byte); ok {
+				val = string(b)
+			} else if values[i] != nil {
+				val = fmt.Sprintf("%v", values[i])
+			} else {
+				val = "NULL"
+			}
+			rowMap[col] = val
+		}
+
+		parsedRows = append(parsedRows, rowMap)
+	}
+
+	return parsedRows, nil
+}
