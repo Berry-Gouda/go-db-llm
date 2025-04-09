@@ -106,35 +106,10 @@ func GetTopRows(db *sql.DB, table string, count int) ([]map[string]string, error
 		return nil, err
 	}
 
-	var topRows []map[string]string
-
-	for rows.Next() {
-		values := make([]interface{}, len(columnNames))
-		valuePtrs := make([]interface{}, len(columnNames))
-
-		for i := range values {
-			valuePtrs[i] = &values[i]
-		}
-
-		if err := rows.Scan(valuePtrs...); err != nil {
-			return nil, err
-		}
-
-		rowMap := make(map[string]string)
-		for i, col := range columnNames {
-			var val string
-			if b, ok := values[i].([]byte); ok {
-				val = string(b)
-			} else if values[i] != nil {
-				val = fmt.Sprintf("%v", values[i])
-			} else {
-				val = "NULL"
-			}
-			rowMap[col] = val
-		}
-
-		topRows = append(topRows, rowMap)
-
+	topRows, err := ParseRows(rows, columnNames)
+	if err != nil {
+		fmt.Println("Failed to Parse Rows \n", err)
+		return nil, err
 	}
 
 	return topRows, nil
@@ -251,4 +226,59 @@ func getColumnOrder(db *sql.DB, tName string) ([]string, error) {
 	}
 
 	return columns, nil
+}
+
+func CompColumnSearch(db *sql.DB, table string, searchVal string, compColumn string) ([]map[string]string, error) {
+
+	var query string
+
+	isKeyCol, err := checkIfColumnIsKeyRefrence(db, table, compColumn)
+	fmt.Println("Key Col?\t", isKeyCol)
+	if err != nil {
+		isKeyCol = false
+	}
+	if isKeyCol {
+		query = `SELECT * FROM ` + table + ` WHERE ` + compColumn + ` = ?`
+	} else {
+		query = `SELECT * FROM ` + table + ` WHERE ` + compColumn + ` LIKE ?`
+		searchVal = "%" + searchVal + "%"
+
+	}
+
+	rows, err := db.Query(query, searchVal)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	columnNames, err := rows.Columns()
+	if err != nil {
+		return nil, err
+	}
+
+	results, err := ParseRows(rows, columnNames)
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
+
+}
+
+func checkIfColumnIsKeyRefrence(db *sql.DB, tName string, colName string) (bool, error) {
+	var count int
+
+	query := `
+		SELECT COUNT(*) FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE
+		WHERE TABLE_SCHEMA = DATABASE()
+		AND TABLE_NAME = ?
+		AND COLUMN_NAME = ?;
+		`
+
+	err := db.QueryRow(query, tName, colName).Scan(&count)
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }

@@ -113,3 +113,26 @@ func HandleBulkInsert(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }
+
+func HandleCompColumnSearch(w http.ResponseWriter, r *http.Request) {
+	DB := db.GetDBConnection()
+
+	var data db.CompColumnSearchRequest
+
+	err := json.NewDecoder(r.Body).Decode(&data)
+	if err != nil {
+		http.Error(w, "Failed to parse json", http.StatusBadRequest)
+		return
+	}
+
+	results, err := db.CompColumnSearch(DB, data.Table, data.SearchValue, data.CompColumn)
+	if err != nil {
+		http.Error(w, "failed to get results", http.StatusExpectationFailed)
+	}
+
+	var rtnData db.SearchResults
+	rtnData.Results = results
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(rtnData)
+}

@@ -1,2 +1,7 @@
 frontend/node_modules/
 frontend/electrun.sh
+Meta-Llama-3-8B-Instruct/
+*.pyc
+*__init__.py
+**llama/
+venv/
