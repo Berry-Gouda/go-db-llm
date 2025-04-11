@@ -245,6 +245,8 @@ func CompColumnSearch(db *sql.DB, table string, searchVal string, compColumn str
 
 	}
 
+	fmt.Println(query, searchVal)
+
 	rows, err := db.Query(query, searchVal)
 	if err != nil {
 		return nil, err

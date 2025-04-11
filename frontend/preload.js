@@ -9,5 +9,5 @@ contextBridge.exposeInMainWorld("electronAPI", {
     bulkInsert: async (table) => {return await ipcRenderer.invoke("bulk-insert", table)},
     sendSearch: async (data) => {return await ipcRenderer.invoke("send-search", data)},
     startLLM: () => ipcRenderer.invoke("start-llm"),
-
+    closeLLM: () => ipcRenderer.invoke("close-llm"),
 });
