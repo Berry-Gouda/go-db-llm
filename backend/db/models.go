@@ -75,3 +75,9 @@ func ConvertToCamelCase(input string) string {
 	}
 	return strings.Join(parts, "")
 }
+
+type CompColumnSearchRequest struct {
+	Table       string `json:"table"`
+	CompColumn  string `json:"compColumn"`
+	SearchValue string `json:"searchVal"`
+}

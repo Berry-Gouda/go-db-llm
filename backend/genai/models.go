@@ -2,6 +2,7 @@ package genai
 
 import (
 	"bufio"
+	"context"
 	"os/exec"
 	"sync"
 )
@@ -12,16 +13,18 @@ type GenAIPromptFromFrontEnd struct {
 }
 
 type ProcessedPrompt struct {
-	p string `json:"prompt"`
+	P string `json:"prompt"`
 }
 
 type LlamaProcess struct {
 	Cmd     *exec.Cmd
-	Running bool
 	Stdin   *bufio.Writer
 	Stdout  *bufio.Scanner
+	Stderr  *bufio.Scanner
 	Ch      chan string
-
-	Mu   sync.Mutex
-	Cond *sync.Cond
+	Cancel  context.CancelFunc
+	Mu      sync.Mutex
+	Cond    *sync.Cond
+	Running bool
+	Done    chan struct{}
 }

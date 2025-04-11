@@ -197,9 +197,9 @@ ipcMain.handle("bulk-insert", async(event, table) => {
     return {message: data.message};
 });
 
-IpcMain.handle("send-search", async(event, data) =>{
+ipcMain.handle("send-search", async(event, data) =>{
     url = baseURL + "comp-column-search";
-    const respons = await fetch(url, {
+    const response = await fetch(url, {
         method: "POST",
         headers:{
             "Content-Type": "application/json",
@@ -224,5 +224,34 @@ ipcMain.handle("start-llm", async (event)=>{
     })
     aiWindow.loadFile(path.join(basePath, "loading.html"))
 
-    //This is where we would finish fully loading the Model Front end.
+    const response = await fetch(url, {
+        method: "POST",
+        headers:{
+            "Content-Type": "application/json",
+        }
+    });
+
+    const msg = await response.json();
+    if (msg.message == 'Model loaded'){
+        aiWindow.loadFile(path.join(basePath, "promptWindow.html"))
+    }
 })
+
+ipcMain.handle("close-llm", async (event) =>{
+    url = baseURL + "close-llm";
+    const response = await fetch (url, {
+        method: "POST",
+        headers:{
+            "Content-Type": "application/json",
+        }
+    });
+
+    const msg = await response.json();
+    if (msg.message == 'Model Closed'){
+        aiWindow.close()
+    }
+})
+
+function openPromptWindow(){
+
+}

@@ -176,7 +176,7 @@ function SetButtonListeners(){
 }
 
 function ShowResults(){
-    window.electronAPI.openResults(sResults ?   data = {results: sResults, 
+    window.electronAPI.openResults(sResults ?   data = {results: sResults.results.results, 
                                                         schema: totalData.tableSchema[selectedTable], 
                                                         isSearch: isSearch} : 
                                                 data = {results: totalData.top20[selectedTable],
@@ -191,15 +191,18 @@ async function BulkInsert(){
 
 async function SendSearch(){
     const input = document.getElementById("search-input");
-    const searchVal = input.value
+    searchValToSend = input.value
     const data = {
         table: selectedTable,
         compColumn: selectedColumn,
-        searchVal: searchVal,
+        searchVal: searchValToSend,
     };
 
-    const results = await window.electronAPI.sendSearch(data);
-    console.log(results);
+    isSearch = true;
+    sResults = await window.electronAPI.sendSearch(data);
+
+    console.log(sResults.results)
+    
 }
 
 function StartLLM(){
@@ -207,7 +210,7 @@ function StartLLM(){
 }
 
 function CloseLLM(){
-
+    window.electronAPI.closeLLM();
 }
 
 function OpenPromptWindow(){

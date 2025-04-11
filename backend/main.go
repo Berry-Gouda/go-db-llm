@@ -15,7 +15,9 @@ func main() {
 	http.HandleFunc("/close-db", handlers.HandleCloseDBConnection)
 	http.HandleFunc("/load-main", handlers.HandleLoadMainPage)
 	http.HandleFunc("/bulk-insert", handlers.HandleBulkInsert)
-	http.HandleFunc("/start-llm", handlers.StartLLM)
+	http.HandleFunc("/comp-column-search", handlers.HandleCompColumnSearch)
+	http.HandleFunc("/start-llm", handlers.HandleStartLlama)
+	http.HandleFunc("/close-llm", handlers.HandleCloseLlama)
 	fmt.Println("Go Server Running on http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
