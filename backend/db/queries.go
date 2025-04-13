@@ -284,3 +284,11 @@ func checkIfColumnIsKeyRefrence(db *sql.DB, tName string, colName string) (bool,
 
 	return count > 0, nil
 }
+
+func BuildQuery(colsInOrder []string, joins map[string]map[string][]string, on string, where string) string {
+
+	var query string
+
+	query = fmt.Sprintf(`SELECT %s`, String.joins(", ", colscolsInOrder...))
+
+}

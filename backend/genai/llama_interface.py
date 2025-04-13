@@ -2,8 +2,6 @@ import sys
 import json
 from typing import List, Optional
 from llama import Dialog, Llama
-import torch
-import torch.distributed as dist
 
 
 def main():
@@ -16,14 +14,6 @@ def main():
     top_p=0.9
 
 
-
-    if torch.cuda.is_available():
-        torch.set_default_device("cuda")
-    else:
-        torch.set_default_device("cpu")
-
-    torch.set_default_dtype(torch.float32)
-
     generator = Llama.build(
         ckpt_dir=ckpt_dir,
         tokenizer_path=tok_path,
@@ -33,11 +23,19 @@ def main():
 
     print("Successful Loading of Model")
 
+    #dialogs: List[Dialog] = [
+    #    [{"role": "user", "content": "remove all words and symbols that are not a units or amounts make sure to include units and their measure that have spaces between them. Data like cookies or ribs count as a unit. Don't reply with any extra information"
+    #   "For example [1, 1/2 Cup(aprx. 8ml) 243g] you should respond [1, 1/2Cup 8ml 243g]"
+    #    " data: [345, )(appprox 27ml) 2C], [6454, copkie], [2584, coookie], [755, tbsp mix (25g)makes 1 cookie] [6303, fl.oz . as prepared) | ( (45.0 ml) aprx]"},
+    #    ]
+    #     ]
+
     cin = input()
-    while cin != "{\"prompt\":\"Exit\"}":
+    while cin != 'Exit':
 
         data = json.loads(cin)
 
+        print("\n\nFrom Python ->", data, "\n\n")
         dialogs: List[Dialog] = [[data]]
 
         results = generator.chat_completion(
@@ -46,19 +44,18 @@ def main():
             temperature=temp,
             top_p=top_p
         )
+        print("\n\nFROM PYTHON RESULT\n\n",results)
 
         for dialog, result in zip(dialogs, results):
             for msg in dialog:
-                #print(f"{msg['role']}: {msg['content']}\n")
-                print(f"{result['generation']['content']}")
-              
+                print(f"{msg['role']}: {msg['content']}\n")
+                print(f">{result['generation']['role']}: {result['generation']['content']}")
+                print("\n=========================================================================================\n")
 
         dialogs: List[Dialog] = []
 
         cin = input()
 
-    dist.destroy_process_group()
-    print("Model Unloaded")
     quit()
 
 if __name__ == "__main__":

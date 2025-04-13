@@ -10,4 +10,6 @@ contextBridge.exposeInMainWorld("electronAPI", {
     sendSearch: async (data) => {return await ipcRenderer.invoke("send-search", data)},
     startLLM: () => ipcRenderer.invoke("start-llm"),
     closeLLM: () => ipcRenderer.invoke("close-llm"),
+    openPromptWindow: (data) => ipcRenderer.send("open-prompt-window", data),
+    onPromptData: (callback) => ipcRenderer.on("prompt-win-start-data", (event, data) => callback(data)),
 });

@@ -7,9 +7,14 @@ import (
 	"sync"
 )
 
-type GenAIPromptFromFrontEnd struct {
-	UserPrompt string     `json:"prompt"`
-	SentData   [][]string `json:"data"`
+type DataToGeneratePrompt struct {
+	ColumnsInOrder []string            `json:"columns"`
+	ColData        map[string][]string `json:"colData"`
+	TextPrompt     string              `json:"textPrompt"`
+	SampleData     string              `json:"sampleData"`
+	SampleResults  string              `json:"sampleResults"`
+	On             string              `json:"on"`
+	Where          string              `json:"where"`
 }
 
 type ProcessedPrompt struct {

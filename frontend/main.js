@@ -6,6 +6,7 @@ const path = require("path");
 
 let win;
 let aiWindow;
+let promptWindow;
 let basePath = "./templates/"
 
 let user = "";
@@ -252,6 +253,19 @@ ipcMain.handle("close-llm", async (event) =>{
     }
 })
 
-function openPromptWindow(){
+ipcMain.on("open-prompt-window", (event, data) => {    
 
-}
+    promptWindow = new BrowserWindow({
+        width: 1200,
+        height: 1000,
+        webPreferences:{
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, "preload.js")
+        }
+    })
+    promptWindow.loadFile(path.join(basePath, "promptWindow.html"))
+    promptWindow.webContents.on("did-finish-load", () => {
+        promptWindow.webContents.send("prompt-win-start-data", data)
+    })
+})

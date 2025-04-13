@@ -4,10 +4,90 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link rel="stylesheet" href="../style/global.css">
-        <link rel="stylesheet" href="../style/index.css">
+        <link rel="stylesheet" href="../style/promptGen.css">
         <title>Prompt Builder</title>
     </head>
-    <body>
+    <body> 
         <h1>Prompt Builder</h1>
+        <div class="grid-container">
+
+            <div id="db-overview" class="outlined-1-col">
+                <h3>Tables Overview</h3>
+                <table id="tables-overview" class="overview-table">
+                    <thead>
+                        <tr>
+                            <th>Table Name</th>
+                            <th>Table Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="selected-t-overview" class="outlined-1-col">
+                <h3>Select Table For Info</h3>
+                <table id="table-schema" class="overview-table">
+                    <thead>
+                        <th>Column Name</th>
+                        <th>Data Type</th>
+                        <th>Key Type</th>
+                        <th>Nullable</th>
+                        <th>Default Value</th>
+                    </thead>
+                    <tbody>
+
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="prompt-checklist" class="outlined-1-col">
+                <h3>Prompt Checklist</h3>
+            </div>
+
+            <div class="mini-grid-container" id="row2">
+
+                <div id="query-data-div" class="outlined-1-col">
+                    <h3>Data to Send</h3>
+                    <table id="query-data-table" class="overview-table">
+                        <thead>
+                            <th>Col Name</th>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+
+                <div id="join-need-div" class="outlined-1-col">
+                    <h3>Tables Needing Join</h3>
+                    <table id="join-req-table" class="overview-table">
+                        <thead>
+                            <th>Table Name</th>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+
+
+            </div>
+
+            <div id="text-input-div">
+                <input id="input-field" type="text">
+            </div>
+
+            <div id="button-div">
+                <button id="sc">Select Column</button>
+                <button id="ij">Inner Join</button>
+                <button id="lj">Left Join</button>
+                <button id="rj">Right Join</button>
+                <button id="cd">Clear Data</button>
+            </div>
+        </div>
+
+        <script src="../scripts/promptGen.js"></script>
     </body>
 </html>

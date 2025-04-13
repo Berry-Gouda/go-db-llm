@@ -215,4 +215,12 @@ function CloseLLM(){
 
 function OpenPromptWindow(){
 
+    console.log("Here")
+
+    data = {
+        tablesOverview: totalData.tablesOverview,
+        tableSchema: totalData.tableSchema
+    }
+
+    window.electronAPI.openPromptWindow(data)
 }

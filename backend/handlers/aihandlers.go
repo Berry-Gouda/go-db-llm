@@ -30,6 +30,7 @@ func sendDataToLlama(prompt string) {
 	if LProcess == nil {
 		return
 	}
+
 	LProcess.Ch <- prompt
 }
 
@@ -59,3 +60,13 @@ func waitUntilRunning(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"message": "Model loaded"})
 }
+
+func buildPrompt() string {
+	var prompt string
+
+}
+
+/* [{"role": "user", "content": "remove all words and symbols that are not a units or amounts make sure to include units and their measure that have spaces between them. Data like cookies or ribs count as a unit. Don't reply with any extra information"
+ "For example [1, 1/2 Cup(aprx. 8ml) 243g] you should respond [1, 1/2Cup 8ml 243g]"
+" data: [345, )(appprox 27ml) 2C], [6454, copkie], [2584, coookie], [755, tbsp mix (25g)makes 1 cookie] [6303, fl.oz . as prepared) | ( (45.0 ml) aprx]"},
+ ]    ] */

@@ -19,6 +19,16 @@ table{
     box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
 }
 
+.outlined-3-col{
+    width: 100%;
+    height: 100%;
+    grid-column: span 3;
+    background-color: white;
+    border: 2px solid black;
+    border-radius: 8px;
+    box-shadow: 2px 2px 5px rgba(0,0,0,0.2);
+}
+
 th{
     text-align: center;
     border-bottom: 2px solid black;
@@ -49,3 +59,8 @@ tr:nth-child(even){
 #selected{
     background-color: lightskyblue !important; 
 }
+
+.center-p{
+    text-align: center;
+}
+
