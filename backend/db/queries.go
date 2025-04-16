@@ -233,7 +233,6 @@ func CompColumnSearch(db *sql.DB, table string, searchVal string, compColumn str
 	var query string
 
 	isKeyCol, err := checkIfColumnIsKeyRefrence(db, table, compColumn)
-	fmt.Println("Key Col?\t", isKeyCol)
 	if err != nil {
 		isKeyCol = false
 	}
@@ -244,8 +243,6 @@ func CompColumnSearch(db *sql.DB, table string, searchVal string, compColumn str
 		searchVal = "%" + searchVal + "%"
 
 	}
-
-	fmt.Println(query, searchVal)
 
 	rows, err := db.Query(query, searchVal)
 	if err != nil {
@@ -285,10 +282,130 @@ func checkIfColumnIsKeyRefrence(db *sql.DB, tName string, colName string) (bool,
 	return count > 0, nil
 }
 
-func BuildQuery(colsInOrder []string, joins map[string]map[string][]string, on string, where string) string {
+func BuildQuery(db *sql.DB, data GenerateQueryRequest) ([]map[string]string, error) {
 
 	var query string
+	var joinStatement string
+	var whereStatement string
+	var whereValue string
+	var results []map[string]string
 
-	query = fmt.Sprintf(`SELECT %s`, String.joins(", ", colscolsInOrder...))
+	fmt.Println(data)
 
+	if !validateGenQueryData(db, data.Columns) {
+		return results, fmt.Errorf("%s", "Table and/or Column names could not be validated")
+	}
+
+	selectStatement := buildSelectStatement(data.Columns) + " "
+
+	if len(data.JoinData) > 0 {
+		joinStatement = buildJoinStatement(data.JoinData) + " "
+	} else {
+		joinStatement = ""
+	}
+
+	if data.Where != (WhereData{}) {
+		whereStatement, whereValue = buildWhereStatement(data.Where)
+	} else {
+		whereStatement = ""
+	}
+
+	query = selectStatement + joinStatement + whereStatement
+
+	results, err := exicuteQuery(db, data.Columns, query, whereValue)
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
+
+func validateGenQueryData(db *sql.DB, columns []string) bool {
+
+	for _, val := range columns {
+		parts := strings.Split(val, ".")
+		if len(parts) != 2 {
+			return false
+		}
+
+		tschema, err := GetTableSchema(db, parts[0])
+		if err != nil {
+			return false
+		}
+		found := false
+		for _, schema := range tschema {
+			if schema.ColName == parts[1] {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+
+	}
+	return true
+}
+
+func buildSelectStatement(cols []string) string {
+	statement := fmt.Sprintf(`SELECT %s FROM %s`, strings.Join(cols, ", "), strings.Split(cols[0], ".")[0])
+	return statement
+}
+
+func buildJoinStatement(jData []JoinData) string {
+
+	var joinString string
+
+	fmt.Println("Inside buildJoinStatement")
+
+	for _, val := range jData {
+		tempString := strings.ToUpper(val.Join + " JOIN")
+		tempString += fmt.Sprintf(" %s ON %s.%s %s %s", val.JoinTable, val.FromTable, val.FromColumn, val.Opp, val.CompVal)
+		joinString += tempString
+	}
+
+	fmt.Println(joinString)
+
+	return joinString
+}
+
+func buildWhereStatement(wData WhereData) (string, string) {
+
+	var where string
+	var val string
+
+	parts := strings.Split(wData.Column, ".")
+	table := parts[0]
+	column := parts[1]
+
+	keyCol, err := checkIfColumnIsKeyRefrence(GetDBConnection(), table, column)
+	if err != nil {
+		return "", ""
+	}
+
+	if keyCol {
+		where = fmt.Sprintf(`WHERE %s %s ?`, wData.Column, wData.Opp)
+		val = wData.Where
+	} else {
+		where = fmt.Sprintf(`WHERE %s LIKE ?`, wData.Column)
+		val = "%" + wData.Where + "%"
+	}
+
+	return where, val
+
+}
+
+func exicuteQuery(db *sql.DB, columns []string, query string, compVal string) ([]map[string]string, error) {
+	rows, err := db.Query(query, compVal)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	results, err := ParseRows(rows, columns)
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
 }

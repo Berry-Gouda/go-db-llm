@@ -16,6 +16,7 @@ func main() {
 	http.HandleFunc("/load-main", handlers.HandleLoadMainPage)
 	http.HandleFunc("/bulk-insert", handlers.HandleBulkInsert)
 	http.HandleFunc("/comp-column-search", handlers.HandleCompColumnSearch)
+	http.HandleFunc("/create-query", handlers.HandleCreateQuery)
 	http.HandleFunc("/start-llm", handlers.HandleStartLlama)
 	http.HandleFunc("/close-llm", handlers.HandleCloseLlama)
 	fmt.Println("Go Server Running on http://localhost:8080")

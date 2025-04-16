@@ -1,327 +1,326 @@
-let selectedTable = ''
-let selectedColumn = ''
-let selectedJoin = ''
-let tData
+let selectedTable = '', selectedColumn = '', selectedJoin = '', fromTable = '';
+let columnsInOrder = [], displayColumnsInOrder = [], joinDataList = [], tablesNeedingJoins = [];
+let tData, opBtnDiv, submitDiv, subBtn, input;
 
-let fromTable = ''
+let where = new Map([["column", ""],["opperator", ""],["where", ""]])
 
-let columnsInOrder = []
-let displayColumnsInOrder = []
-let joinDataList = []
-
-let tablesNeedingJoins = []
-
-
-document.addEventListener("DOMContentLoaded", () =>{
-    buttonEvents();
-})
+document.addEventListener("DOMContentLoaded", () => {
+    opBtnDiv = document.getElementById("hidden-btns");
+    submitDiv = document.getElementById("submit-div");
+    subBtn = document.getElementById("sub-btn")
+    input = document.getElementById("input-field");
+    setupButtonEvents();
+});
 
 window.electronAPI.onPromptData((data) => {
-    tData = data
-    UpdatePageData(tData)
-})
+    tData = data;
+    UpdateTablesOverview(data.tablesOverview);
+});
 
-function UpdatePageData(data){
-    console.log(data.tablesOverview)
-    UpdateTablesOverview(data.tablesOverview)
-}
-
-function UpdateTablesOverview(tAndC){
-    const tOTable = document.querySelector('#tables-overview tbody');
-    
-    Object.entries(tAndC).forEach(([key, value]) => {
-        const newRow = document.createElement('tr');
-        const tableCell = document.createElement('td');
-        tableCell.textContent = String(key);
-        const countCell = document.createElement('td');
-        countCell.textContent = String(value);
-
-        newRow.appendChild(tableCell);
-        newRow.appendChild(countCell);
-
-        newRow.addEventListener("click", function(){
-            
-            oldSelected = document.getElementById("t-selected")
-            if (oldSelected){
-                oldSelected.id = "";
-                unselect(oldSelected, selectedTable)
-            }
-
-            if(oldSelected === newRow){
-                ClearSelectedTableSchema()
-                updateSelectedTable('')
-                console.log(selectedTable)
-                return
-            }
-
-            newRow.id = "t-selected";
-            updateSelectedTable(newRow.firstElementChild.innerHTML)
-            highlightRow(newRow)
-            ClearSelectedTableSchema()
-            DisplaySelectedSchema(selectedTable)
-            console.log(selectedTable)
-        });
-
-        tOTable.appendChild(newRow);
-        
+// Utility Functions
+function clearSelection() {
+    document.querySelectorAll("#t-selected, #c-selected").forEach(el => {
+        unselect(el);
+        el.removeAttribute("id");
     });
 }
 
-function unselect(tr){
-    let allRows = Array.from(tr.parentElement.children);
-    let index = allRows.indexOf(tr); 
-    tr.style.backgroundColor = index % 2 === 1 ? "lightgrey" : "";
-
+function resetSchemaDisplay() {
+    updateSelectedColumn('');
+    updateSelectedTable('');
+    ClearSelectedTableSchema();
 }
 
-function updateSelectedColumn(cName){
-    selectedColumn = cName
+function createJoinMap(type) {
+    return new Map([
+        ["join", type],
+        ["fTable", fromTable],
+        ["joinedTable", selectedJoin]
+    ]);
 }
 
-function updateSelectedTable(tName){
-    selectedTable = tName
-    selectedColumn = ''
-}
-
-function updateSelectedJoin(jName){
-    selectedJoin = jName
-
-}
-
-function highlightRow(tr){
-    if(tr.style.backgroundColor == "lightskyblue"){
-        unselect(tr)
-        return
-    }
-    tr.style.backgroundColor = "lightskyblue"
-}
-
-function DisplaySelectedSchema(table){
-    tBody = document.querySelector('#table-schema tbody');
-    heading = document.querySelector('#selected-t-overview h3');
-    heading.innerHTML = table + ' Schema';
-    
-    Object.entries(tData.tableSchema[table]).forEach(val => {
-        const newRow = document.createElement('tr');
-        cNameCell = document.createElement('td');
-        dTypeCell = document.createElement('td');
-        kTypeCell = document.createElement('td');
-        nullCell = document.createElement('td');
-        defaultValCell = document.createElement('td');            
-        cNameCell.textContent = String(val[1]['ColName']);
-        dTypeCell.textContent = String(val[1]['DType']);
-        kTypeCell.textContent = String(val[1]['KeyType']);
-        nullCell.textContent = String(val[1]['IsNull']);
-        defaultValCell.textContent = String(val[1]['ColDefault']);
-
-        newRow.appendChild(cNameCell);
-        newRow.appendChild(dTypeCell);
-        newRow.appendChild(kTypeCell);
-        newRow.appendChild(nullCell);
-        newRow.appendChild(defaultValCell);
-
-        newRow.addEventListener("click", function(){
-            oldSelected = document.getElementById("c-selected");
-            if (oldSelected){
-                oldSelected.id = "";
-                unselect(oldSelected, selectedColumn);
-            }
-
-            if(oldSelected === newRow){
-                updateSelectedColumn('')
-                console.log(selectedColumn)
-                return
-            }
-
-            newRow.id = "c-selected";
-            updateSelectedColumn(newRow.firstElementChild.innerHTML);
-            highlightRow(newRow);
-            console.log(selectedColumn)
-        })
-
-        tBody.appendChild(newRow);
-    });
-}
-
-function ClearSelectedTableSchema(){
-    tBody = document.querySelector('#table-schema tbody');
-    heading = document.querySelector('#selected-t-overview h3');
-    heading.innerHTML = 'Select Table For Info';
-    tBody.replaceChildren();
-}
-
-function buttonEvents(){
-    const sc = document.getElementById("sc");
-    const cd = document.getElementById("cd");
-    const ij = document.getElementById("ij");
-    const lj = document.getElementById("lj");
-    const rj = document.getElementById("rj");
-
-    sc.addEventListener("click", AddColumn);
-    cd.addEventListener("click", ClearPromptData);
-    ij.addEventListener("click", CreateInnerJoin);
-    lj.addEventListener("click", CreateLeftJoin);
-    rj.addEventListener("click", CreateRightJoin);
-}
-
-function AddColumn(){
-    if(selectedColumn == '' || selectedTable == ''){
-        alert("Must select a table and column")
-        return
-    }
-
-    if(fromTable == ''){
-        fromTable = selectedTable
-    }
-
-    AddTableToNeedJoin()
-
-    col = selectedTable + '.' + selectedColumn
-    columnsInOrder.push(col)
-
-    let abr = '';
-    if (typeof selectedTable === 'string') {
-        selectedTable.split('_').forEach(val => {
-            if (val.length > 0) abr += val[0];
-        });
-    }
-
-    disCol = abr + '.' + selectedColumn
-    displayColumnsInOrder.push(disCol)
-
-    updateQueryCols()
-    updateJoinNeeds()
-}
-
-function updateQueryCols(){
-    tBody = document.querySelector('#query-data-table tbody');
-    tBody.innerHTML = ''
-
-    displayColumnsInOrder.forEach(val => {
-        const newRow = document.createElement('tr');
-        cNameCell = document.createElement('td');
-        cNameCell.textContent = val
-        newRow.appendChild(cNameCell)
-        console.log(newRow)
-        tBody.appendChild(newRow)
-    })
-
-}
-
-function ClearPromptData(){
-    fromTable = ''
-    displayColumnsInOrder = []
-    columnsInOrder = []
-    updateQueryCols()
-}
-
-function AddTableToNeedJoin(){
-    if(selectedTable != fromTable){
-        for(const m of joinDataList){
-            if(m.has("table") && m.get("table") === selectedTable)
-                return
+function setRowClickHighlight(row, idName, updater) {
+    row.addEventListener("click", () => {
+        const oldSelected = document.getElementById(idName);
+        if (oldSelected) {
+            oldSelected.removeAttribute("id");
+            unselect(oldSelected);
         }
-        tablesNeedingJoins.push(selectedTable)
+
+        if (oldSelected === row) {
+            updater('');
+            return;
+        }
+        row.id = idName;
+        updater(row.firstElementChild.textContent);
+        highlightRow(row);
+    });
+}
+
+// Main Functions
+function UpdateTablesOverview(tAndC) {
+    const tbody = document.querySelector('#tables-overview tbody');
+    tbody.innerHTML = '';
+    Object.entries(tAndC).forEach(([key, value]) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${key}</td><td>${value}</td>`;
+        setRowClickHighlight(row, "t-selected", updateSelectedTable);
+        row.addEventListener("click", () => {
+            ClearSelectedTableSchema();
+            DisplaySelectedSchema(selectedTable);
+        });
+        tbody.appendChild(row);
+    });
+}
+
+function DisplaySelectedSchema(table) {
+    const tBody = document.querySelector('#table-schema tbody');
+    const heading = document.querySelector('#selected-t-overview h3');
+    heading.textContent = `${table} Schema`;
+    tBody.innerHTML = '';
+
+    Object.values(tData.tableSchema[table]).forEach(col => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${col.ColName}</td>
+            <td>${col.DType}</td>
+            <td>${col.KeyType}</td>
+            <td>${col.IsNull}</td>
+            <td>${col.ColDefault}</td>
+        `;
+        setRowClickHighlight(row, "c-selected", updateSelectedColumn);
+        tBody.appendChild(row);
+    });
+}
+
+function ClearSelectedTableSchema() {
+    document.querySelector('#selected-t-overview h3').textContent = 'Select Table For Info';
+    document.querySelector('#table-schema tbody').innerHTML = '';
+}
+
+function AddColumn() {
+    if (!selectedTable || !selectedColumn) return alert("Must select a table and column");
+
+    if (!fromTable) fromTable = selectedTable;
+    AddTableToNeedJoin();
+
+    const fullCol = CreateTableColumnName(selectedTable, selectedColumn)
+    columnsInOrder.push(fullCol);
+
+    const displayCol = selectedTable.split('_').map(v => v[0]).join('') + '.' + selectedColumn;
+    displayColumnsInOrder.push(displayCol);
+
+    updateQueryCols();
+    updateJoinNeeds();
+}
+
+function updateQueryCols() {
+    const tBody = document.querySelector('#query-data-table tbody');
+    tBody.innerHTML = '';
+    displayColumnsInOrder.forEach(col => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${col}</td>`;
+        tBody.appendChild(row);
+    });
+}
+
+function ClearPromptData() {
+    fromTable = '';
+    columnsInOrder = [];
+    displayColumnsInOrder = [];
+    updateQueryCols();
+}
+
+function AddTableToNeedJoin() {
+    if (selectedTable !== fromTable && !joinDataList.some(m => m.get("table") === selectedTable)) {
+        tablesNeedingJoins.push(selectedTable);
     }
 }
 
-function updateJoinNeeds(){
-    tBody = document.querySelector('#join-req-table tbody');
-    tBody.innerHTML = ''
-
-    tablesNeedingJoins.forEach(val => {
-        const newRow = document.createElement('tr');
-        tNameCell = document.createElement('td');
-        tNameCell.textContent = val;
-        newRow.appendChild(tNameCell)
-
-        newRow.addEventListener("click", function(){
-            oldSelected = document.getElementById("join-selected");
-            if(oldSelected){
-                oldSelected.id="";
-                unselect(oldSelected, selectedJoin)
-            }
-
-            if(oldSelected === newRow){
-                updateSelectedJoin('')
-                return
-            }
-
-            newRow.id = "join-selected";
-            highlightRow(newRow)
-        })
-
-        tBody.appendChild(newRow)
-    })
+function updateJoinNeeds() {
+    const tBody = document.querySelector('#join-req-table tbody');
+    tBody.innerHTML = '';
+    tablesNeedingJoins.forEach(table => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${table}</td>`;
+        setRowClickHighlight(row, "join-selected", updateSelectedJoin);
+        tBody.appendChild(row);
+    });
 }
 
-function CreateInnerJoin(){
-    if(selectedJoin == ''){
-        alert("Must select Table to join")
-    }
+function createJoin(type) {
+    if (!selectedJoin) return alert("Must select Table to join");
 
-    tSelected = document.getElementById("t-selected")
-    cSelected = document.getElementById("c-selected")
+    clearSelection();
+    resetSchemaDisplay();
+    DisplaySelectedSchema(fromTable);
 
-    unselect(tSelected)
-    unselect(cSelected)
+    const joinMap = createJoinMap(type);
+    joinDataList.push(joinMap);
 
-    updateSelectedColumn('')
-    updateSelectedTable('')
-
-    ClearSelectedTableSchema();
-    selectedTable = fromTable;
-    DisplaySelectedSchema(fromTable)
+    opBtnDiv.style.display = 'flex';
+    document.querySelectorAll(".comp-btn").forEach(btn => {
+        btn.onclick = () => {
+            const op = btn.getAttribute("data-op");
+            CompButtonClick(joinMap, op);
+        };
+    });
     
-    joinMap = new Map()
-    joinMap.set("join", "inner")
+}
 
-    
+function CompButtonClick(joinMap, op) {
+    joinMap.set("operator", op);
+    joinMap.set("fCol", selectedColumn);
+    opBtnDiv.style.display = 'none';
+    submitDiv.style.display = 'flex'
+    clearSelection();
+    resetSchemaDisplay();
 
+    op !== '=' ? JoinCompValue(joinMap) : JoinCompColumn(joinMap);
+}
+
+function JoinCompColumn(joinMap) {
+    DisplaySelectedSchema(selectedJoin);
+    subBtn.style.display = 'block'
+    subBtn.textContent = "Complete Join"
+    subBtn.onclick = () => {
+        joinMap.set("compVal", selectedJoin+"."+selectedColumn);
+        submitDiv.style.display = 'none';
+        resetSchemaDisplay();
+        RemoveTableFromJoinNeeds(selectedJoin);
+        updateJoinNeeds();
+        console.log(joinDataList)
+    };
+}
+
+function JoinCompValue(joinMap) {
+    resetSchemaDisplay();
+    input.placeholder = "Enter Comparison Value";
+    subBtn.style.display = 'block'
+    subBtn.textContent = "Complete Join"
+    subBtn.onclick = () => {
+        joinMap.set("compVal", input.value);
+        submitDiv.style.display = 'none';
+        input.value = '';
+        RemoveTableFromJoinNeeds(selectedJoin);
+        updateJoinNeeds();
+        input.placeholder = "";
+        console.log(joinDataList)
+    };
+}
+
+function RemoveTableFromJoinNeeds(table) {
+    const idx = tablesNeedingJoins.indexOf(table);
+    if (idx !== -1) tablesNeedingJoins.splice(idx, 1);
+}
+
+function SetWhere(){
+    if(selectedColumn == '' || selectedTable == ''){
+        alert("Must select Column and Table ");
+        return;
+    }
+
+    fullName = CreateTableColumnName(selectedTable, selectedColumn)
+
+    opBtnDiv.style.display = 'flex';
+
+    document.querySelectorAll(".comp-btn").forEach(btn => {
+        btn.onclick = () => {
+            const op = btn.getAttribute("data-op");
+            WhereCompButtonClick(op, fullName);
+        };
+    });
 
 }
 
-function CreateLeftJoin(){
-    if(selectedJoin == ''){
-        alert("Must select Table to join")
-    }
-
-    tSelected = document.getElementById("t-selected")
-    cSelected = document.getElementById("c-selected")
-
-    unselect(tSelected)
-    unselect(cSelected)
-
-    updateSelectedColumn('')
-    updateSelectedTable('')
-
-    ClearSelectedTableSchema();
-    DisplaySelectedSchema(fromTable)
-
-
-    joinMap = new Map()
-    joinMap.set("join", "right")
-
+function WhereCompButtonClick(op, fullName){
+    where.set("opperator", op);
+    opBtnDiv.style.display = 'none';
+    submitDiv.style.display = 'flex';
+    subBtn.textContent = "Submit Where Comparison";
+    input.placeholder = "Enter Where Comparison";
+    console.log("This is the JoinDataBefore", joinDataList);
+    subBtn.onclick = () => {
+        where.set("where", input.value);
+        console.log(input.value)
+        where.set("column", fullName)
+        submitDiv.style.display = 'none';
+        input.value = '';
+        input.placeholder = "";
+        console.log("This is the JoinDataAfter", joinDataList);
+    };
 }
 
-function CreateRightJoin(){
-    if(selectedJoin == ''){
-        alert("Must select Table to join")
+function SampleData()
+{
+    const data = CreateQueryJSON();
+
+    window.electronAPI.generateQuery(data);
+}
+
+function setupButtonEvents() {
+    document.getElementById("sc").onclick = AddColumn;
+    document.getElementById("cd").onclick = ClearPromptData;
+    document.getElementById("ij").onclick = () => createJoin("inner");
+    document.getElementById("lj").onclick = () => createJoin("left");
+    document.getElementById("rj").onclick = () => createJoin("right");
+    document.getElementById("w").onclick = SetWhere;
+    document.getElementById("sds").onclick = SampleData;
+}
+
+function updateSelectedColumn(cName) { selectedColumn = cName; }
+function updateSelectedTable(tName) { selectedTable = tName; selectedColumn = ''; }
+function updateSelectedJoin(jName) { selectedJoin = jName; }
+
+function highlightRow(row) {
+    row.style.backgroundColor = "lightskyblue";
+}
+
+function unselect(row) {
+    const index = [...row.parentElement.children].indexOf(row);
+    row.style.backgroundColor = index % 2 === 1 ? "lightgrey" : "";
+}
+
+function CreateTableColumnName(table, column){
+    return `${table}.${column}`;
+}
+
+function CreateQueryJSON(){
+
+    console.log(columnsInOrder)
+    console.log(joinDataList)
+    console.log(where)
+
+    const data = {
+        "columnsInOrder": columnsInOrder,
+        "joinData": joinDataList,
+        "where": where,
     }
 
-    tSelected = document.getElementById("t-selected")
-    cSelected = document.getElementById("c-selected")
+    console.log(data);
 
-    unselect(tSelected)
-    unselect(cSelected)
+    return data;
+}
 
-    updateSelectedColumn('')
-    updateSelectedTable('')
+function CreateQueryJSON() {
+    console.log(columnsInOrder);
+    console.log(joinDataList);
+    console.log(where);
 
-    ClearSelectedTableSchema();
-    DisplaySelectedSchema(fromTable)
+    // Convert where (Map) → plain object
+    const whereObject = Object.fromEntries(where);
 
-    joinMap = new Map()
-    joinMap.set("join", "left")
+    // Convert joinDataList Array(Map) 
+    const joinData = joinDataList.map(entry =>
+        entry instanceof Map ? Object.fromEntries(entry) : entry
+    );
 
+    const data = {
+        columnsInOrder: columnsInOrder,
+        joinData: joinData,
+        where: whereObject,
+    };
+
+    console.log(data);
+    return data;
 }

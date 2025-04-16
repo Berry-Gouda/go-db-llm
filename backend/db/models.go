@@ -81,3 +81,24 @@ type CompColumnSearchRequest struct {
 	CompColumn  string `json:"compColumn"`
 	SearchValue string `json:"searchVal"`
 }
+
+type GenerateQueryRequest struct {
+	Columns  []string   `json:"columnsInOrder"`
+	JoinData []JoinData `json:"joinData"`
+	Where    WhereData  `json:"where"`
+}
+
+type JoinData struct {
+	FromTable  string `json:"fTable"`
+	FromColumn string `json:"fCol"`
+	JoinTable  string `json:"joinedTable"`
+	Join       string `json:"join"`
+	Opp        string `json:"operator"`
+	CompVal    string `json:"compVal"`
+}
+
+type WhereData struct {
+	Column string `json:"column"`
+	Opp    string `json:"opperator"`
+	Where  string `json:"where"`
+}

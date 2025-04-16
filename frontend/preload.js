@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     onResultsData: (callback) => ipcRenderer.on("results-data", (event, data) => callback(data)),
     bulkInsert: async (table) => {return await ipcRenderer.invoke("bulk-insert", table)},
     sendSearch: async (data) => {return await ipcRenderer.invoke("send-search", data)},
+    generateQuery: async (data) => ipcRenderer.invoke("generate-query", data),
     startLLM: () => ipcRenderer.invoke("start-llm"),
     closeLLM: () => ipcRenderer.invoke("close-llm"),
     openPromptWindow: (data) => ipcRenderer.send("open-prompt-window", data),

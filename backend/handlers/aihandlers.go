@@ -63,7 +63,7 @@ func waitUntilRunning(w http.ResponseWriter, r *http.Request) {
 
 func buildPrompt() string {
 	var prompt string
-
+	return prompt
 }
 
 /* [{"role": "user", "content": "remove all words and symbols that are not a units or amounts make sure to include units and their measure that have spaces between them. Data like cookies or ribs count as a unit. Don't reply with any extra information"

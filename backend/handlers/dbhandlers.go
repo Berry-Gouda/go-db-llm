@@ -137,3 +137,28 @@ func HandleCompColumnSearch(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(rtnData)
 }
+
+func HandleCreateQuery(w http.ResponseWriter, r *http.Request) {
+
+	var data db.GenerateQueryRequest
+	var rtnData db.SearchResults
+
+	err := json.NewDecoder(r.Body).Decode(&data)
+	if err != nil {
+		fmt.Println("Failed to parse json", err)
+		http.Error(w, "Failed to parse json", http.StatusBadRequest)
+		return
+	}
+
+	DB := db.GetDBConnection()
+
+	results, err := db.BuildQuery(DB, data)
+	if err != nil {
+		fmt.Println("Failed to exicute query:", err)
+	}
+
+	rtnData.Results = results
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(rtnData)
+}

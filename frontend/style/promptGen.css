@@ -1,11 +1,16 @@
 .grid-container {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 3fr 1.5fr 1fr 1fr;
+    grid-template-rows: 3fr 1.5fr .25fr .25fr .5fr;
     gap: 20px;
     padding: 20px;
     align-items: start;
 }
+
+.grid-item {
+    outline: 5px solid blue; /* shows the boundary of each grid cell */
+  }
+  
 
 #row2{
     grid-column-start: 1;
@@ -56,12 +61,11 @@
     display:flex;
     grid-column-start: 1;
     grid-column-end: span 3;
-    grid-row: 4;
+    grid-row: 5;
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
     gap: 20px;
-    margin-top: 45px;
 }
 
 button{
@@ -90,12 +94,13 @@ button{
 }
 
 #text-input-div{
-    grid-column-start:1;
-    grid-column-end: span 3;
+    display: flex;
+    grid-column: 1 / span 3;
     grid-row: 3;
     align-items: center;
     justify-items: center;
-    margin: auto
+    margin: auto;
+    padding-top: 45px;
 }
 
 #text-input-div input{
@@ -103,4 +108,26 @@ button{
     height: 75px;
     font-size: x-large;
     margin-right: 20px;
+}
+
+#hidden-btns{
+    display:none;
+    grid-column-start: 1;
+    grid-column-end: span 3;
+    grid-row: 4;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+}
+
+#submit-div{
+    display:none;
+    grid-column-start: 1;
+    grid-column-end: span 3;
+    grid-row: 4;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
 }

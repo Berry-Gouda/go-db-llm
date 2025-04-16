@@ -212,6 +212,24 @@ ipcMain.handle("send-search", async(event, data) =>{
     return {results}
 })
 
+ipcMain.handle("generate-query", async (event, data) =>{
+    const url = baseURL + "create-query";
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(data),
+        });
+
+        const msg = await response.json();
+        console.log(msg);
+    } catch (error) {
+        console.error("Fetch error:", error);
+    }
+})
+
 ipcMain.handle("start-llm", async (event)=>{
     url = baseURL + "start-llm"
     aiWindow = new BrowserWindow({
@@ -257,7 +275,7 @@ ipcMain.on("open-prompt-window", (event, data) => {
 
     promptWindow = new BrowserWindow({
         width: 1200,
-        height: 1000,
+        height: 1500,
         webPreferences:{
             nodeIntegration: false,
             contextIsolation: true,
