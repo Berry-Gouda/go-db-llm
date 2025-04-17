@@ -176,11 +176,12 @@ function SetButtonListeners(){
 }
 
 function ShowResults(){
+    schemaData = Object.values(totalData.tableSchema[selectedTable]).map(item => item.ColName)
     window.electronAPI.openResults(sResults ?   data = {results: sResults.results.results, 
-                                                        schema: totalData.tableSchema[selectedTable], 
+                                                        schema: schemaData, 
                                                         isSearch: isSearch} : 
                                                 data = {results: totalData.top20[selectedTable],
-                                                        schema: totalData.tableSchema[selectedTable], 
+                                                        schema: schemaData, 
                                                         isSearch: isSearch})
 }
 
@@ -215,11 +216,10 @@ function CloseLLM(){
 
 function OpenPromptWindow(){
 
-    console.log("Here")
-
     data = {
         tablesOverview: totalData.tablesOverview,
-        tableSchema: totalData.tableSchema
+        tableSchema: totalData.tableSchema,
+        results: sResults
     }
 
     window.electronAPI.openPromptWindow(data)

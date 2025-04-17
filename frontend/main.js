@@ -7,6 +7,7 @@ const path = require("path");
 let win;
 let aiWindow;
 let promptWindow;
+let resultsWindow;
 let basePath = "./templates/"
 
 let user = "";
@@ -223,11 +224,15 @@ ipcMain.handle("generate-query", async (event, data) =>{
             body: JSON.stringify(data),
         });
 
-        const msg = await response.json();
-        console.log(msg);
+        const resultsData = await response.json();
+
+        event.sender.send("prompt-query-return", resultsData);
+        
     } catch (error) {
         console.error("Fetch error:", error);
     }
+
+
 })
 
 ipcMain.handle("start-llm", async (event)=>{
@@ -286,4 +291,14 @@ ipcMain.on("open-prompt-window", (event, data) => {
     promptWindow.webContents.on("did-finish-load", () => {
         promptWindow.webContents.send("prompt-win-start-data", data)
     })
+})
+
+ipcMain.on("submit-samples", (event, data) => {
+    console.log("Samples")
+    console.log(data)
+    if (promptWindow){
+        promptWindow.webContents.send("return-samples", data);
+    }else{
+        alert("Open Prompt Window to Send Samples")
+    }
 })

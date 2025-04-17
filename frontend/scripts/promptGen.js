@@ -4,6 +4,10 @@ let tData, opBtnDiv, submitDiv, subBtn, input;
 
 let where = new Map([["column", ""],["opperator", ""],["where", ""]])
 
+let builtQuery
+let aiprompt = ''
+let sampleData = []
+
 document.addEventListener("DOMContentLoaded", () => {
     opBtnDiv = document.getElementById("hidden-btns");
     submitDiv = document.getElementById("submit-div");
@@ -17,12 +21,43 @@ window.electronAPI.onPromptData((data) => {
     UpdateTablesOverview(data.tablesOverview);
 });
 
-// Utility Functions
+window.electronAPI.onQueryData((data) => {
+    
+    builtQuery = data
+    sd = {
+        results: builtQuery.results,
+        schema: columnsInOrder,
+        isSearch: true,
+    }
+    window.electronAPI.openResults(sd)
+})
+
+window.electronAPI.onRecieveSamples((data) => {
+    console.log("Sample Data:", data)
+    data.forEach((val) => {
+        tempData = []
+        tempData.push(val)
+        sampleData.push(tempData)
+    })
+    updateSampleDataTable()
+})
+
+function updateSampleDataTable(){
+    const sampleTable = document.querySelector("#samples tbody");
+    sampleData.forEach(val => {
+        newRow = document.createElement("tr");
+        newRow.textContent = val;
+        sampleTable.appendChild(newRow);
+    })
+}
+
 function clearSelection() {
-    document.querySelectorAll("#t-selected, #c-selected").forEach(el => {
+    document.querySelectorAll("#t-selected, #c-selected", "#join-selected").forEach(el => {
         unselect(el);
         el.removeAttribute("id");
     });
+
+
 }
 
 function resetSchemaDisplay() {
@@ -57,7 +92,7 @@ function setRowClickHighlight(row, idName, updater) {
     });
 }
 
-// Main Functions
+
 function UpdateTablesOverview(tAndC) {
     const tbody = document.querySelector('#tables-overview tbody');
     tbody.innerHTML = '';
@@ -122,13 +157,6 @@ function updateQueryCols() {
         row.innerHTML = `<td>${col}</td>`;
         tBody.appendChild(row);
     });
-}
-
-function ClearPromptData() {
-    fromTable = '';
-    columnsInOrder = [];
-    displayColumnsInOrder = [];
-    updateQueryCols();
 }
 
 function AddTableToNeedJoin() {
@@ -253,9 +281,17 @@ function WhereCompButtonClick(op, fullName){
 
 function SampleData()
 {
-    const data = CreateQueryJSON();
-
-    window.electronAPI.generateQuery(data);
+    if (!(builtQuery && Object.keys(builtQuery).length)){
+        const data = CreateQueryJSON();
+        window.electronAPI.generateQuery(data);
+    }else{
+        sd = {
+            results: builtQuery.results,
+            schema: columnsInOrder,
+            isSearch: true,
+        }
+        window.electronAPI.openResults(sd)
+    }
 }
 
 function setupButtonEvents() {
@@ -323,4 +359,21 @@ function CreateQueryJSON() {
 
     console.log(data);
     return data;
+}
+
+function ClearPromptData() {
+    fromTable = '';
+    columnsInOrder = [];
+    displayColumnsInOrder = [];
+    updateQueryCols();
+    query = ''
+    aiprompt = ''
+    sampleData = []
+    columnsInOrder = []
+    dispplayColumnsInOrder = []
+    joinDataList = []
+    tablesNeedingJoins = []
+    ClearSelectedTableSchema();
+    UpdateTablesOverview();
+    updateJoinNeeds();
 }

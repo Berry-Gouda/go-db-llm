@@ -27,6 +27,7 @@ type TableSchemaInfo struct {
 
 type SearchResults struct {
 	Results []map[string]string `json:"results"`
+	Query   string              `json:"query"`
 }
 
 type MainPageInfo struct {

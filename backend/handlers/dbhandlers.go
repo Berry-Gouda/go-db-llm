@@ -152,12 +152,13 @@ func HandleCreateQuery(w http.ResponseWriter, r *http.Request) {
 
 	DB := db.GetDBConnection()
 
-	results, err := db.BuildQuery(DB, data)
+	results, query, err := db.BuildQuery(DB, data)
 	if err != nil {
 		fmt.Println("Failed to exicute query:", err)
 	}
 
 	rtnData.Results = results
+	rtnData.Query = query
 
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(rtnData)

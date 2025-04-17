@@ -282,7 +282,7 @@ func checkIfColumnIsKeyRefrence(db *sql.DB, tName string, colName string) (bool,
 	return count > 0, nil
 }
 
-func BuildQuery(db *sql.DB, data GenerateQueryRequest) ([]map[string]string, error) {
+func BuildQuery(db *sql.DB, data GenerateQueryRequest) ([]map[string]string, string, error) {
 
 	var query string
 	var joinStatement string
@@ -293,13 +293,13 @@ func BuildQuery(db *sql.DB, data GenerateQueryRequest) ([]map[string]string, err
 	fmt.Println(data)
 
 	if !validateGenQueryData(db, data.Columns) {
-		return results, fmt.Errorf("%s", "Table and/or Column names could not be validated")
+		return results, "", fmt.Errorf("%s", "Table and/or Column names could not be validated")
 	}
 
 	selectStatement := buildSelectStatement(data.Columns) + " "
 
 	if len(data.JoinData) > 0 {
-		joinStatement = buildJoinStatement(data.JoinData) + " "
+		joinStatement = buildJoinStatement(data.JoinData)
 	} else {
 		joinStatement = ""
 	}
@@ -314,10 +314,10 @@ func BuildQuery(db *sql.DB, data GenerateQueryRequest) ([]map[string]string, err
 
 	results, err := exicuteQuery(db, data.Columns, query, whereValue)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	return results, nil
+	return results, query, nil
 }
 
 func validateGenQueryData(db *sql.DB, columns []string) bool {
@@ -356,12 +356,10 @@ func buildJoinStatement(jData []JoinData) string {
 
 	var joinString string
 
-	fmt.Println("Inside buildJoinStatement")
-
 	for _, val := range jData {
 		tempString := strings.ToUpper(val.Join + " JOIN")
 		tempString += fmt.Sprintf(" %s ON %s.%s %s %s", val.JoinTable, val.FromTable, val.FromColumn, val.Opp, val.CompVal)
-		joinString += tempString
+		joinString += (tempString + " ")
 	}
 
 	fmt.Println(joinString)

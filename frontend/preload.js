@@ -13,4 +13,7 @@ contextBridge.exposeInMainWorld("electronAPI", {
     closeLLM: () => ipcRenderer.invoke("close-llm"),
     openPromptWindow: (data) => ipcRenderer.send("open-prompt-window", data),
     onPromptData: (callback) => ipcRenderer.on("prompt-win-start-data", (event, data) => callback(data)),
+    onQueryData: (callback) => ipcRenderer.on("prompt-query-return", (event, data) => callback(data)),
+    submitSamples: (data) => ipcRenderer.send("submit-samples", (data)),
+    onRecieveSamples: (callback) => ipcRenderer.on("return-samples", (event, data) => callback(data)),
 });

@@ -5,49 +5,56 @@ let searchResults = [];
 let columnNames = [];
 let totalPages = -1;
 let rowCount;
-let tData
+let tData;
+
+let sampleData = []
 
 
 window.electronAPI.onResultsData((data) => {
-    console.log("Recieved data:", data)
     tData = data
     totalPages = Math.ceil(tData.results.length/resultsPerPage)
 
-    DisplaySearchResults()
+    setButtonEvents();
+    DisplaySearchResults();
+
 });
 
 function DisplaySearchResults(){
-    console.log("DisplaySearch")
     const tH3 = document.querySelector("#search-results h3");
     const thead = document.querySelector("#search-table thead");
     const tbody = document.querySelector("#search-table tbody");
-    const columns = []
+
+    tH3.innerHTML = ""
+    thead.innerHTML = ""
+    tbody.innerHTML = ""
+
+    const columns = tData.schema
 
     tH3.textContent = tData.isSearch ? "Search Results" : "Top 20 Rows";
 
-    Object.entries(tData.schema).forEach(([_, colInfo]) => {
+    columns.forEach((col) => {
         
         const headerCell = document.createElement('th');
-        headerCell.textContent = colInfo.ColName;
-        columns.push(colInfo.ColName);
+        headerCell.textContent = col;
         thead.appendChild(headerCell);
     });
-
-    console.log(tData.results)
 
     const start = (currentPage - 1) * resultsPerPage;
     const paginatedResults = tData.results.slice(start, start + resultsPerPage);
 
-
-
     paginatedResults.forEach(row => {
         const tr = document.createElement('tr');
+
+        const rowData = []
 
         columns.forEach(col => {
             const td = document.createElement('td');
             td.textContent = row[col] ?? "";
             tr.appendChild(td);
+            rowData.push(row[col] ?? "");
         });
+
+        tr.onclick = () => rowClick(tr, rowData)
 
         tbody.appendChild(tr);
     });
@@ -74,7 +81,7 @@ function renderPagination(){
             button.textContent = textCont;
             button.onclick = () => {
                 currentPage = textCont;
-                renderTable();
+                DisplaySearchResults();
             }
             if(textCont === currentPage){
                 button.style.fontWeight = "bold";
@@ -97,7 +104,7 @@ function reduceCurrentPage(){
     }
     else{
         currentPage -= 1;
-        renderTable();
+        DisplaySearchResults();
     }
 }
 
@@ -107,6 +114,49 @@ function increaseCurrentPage(){
     }
     else{
         currentPage += 1;
-        renderTable();
+        DisplaySearchResults();
     }
+}
+
+function rowClick(tr, data){
+    if (tr.className == "selected"){
+        tr.removeAttribute("class");
+        unselect(tr);
+        removeFromSample(data);
+    }else{
+        tr.className = "selected"
+        addToSample(data);
+        highlightRow(tr)
+    }
+}
+
+function addToSample(data){
+    sampleData.push(data)
+}
+
+function removeFromSample(data){
+    const index = sampleData.indexOf(data)
+    if (index !== -1){
+        sampleData.splice(index, 1);
+    }
+}
+
+function highlightRow(row) {
+    row.style.backgroundColor = "lightskyblue";
+}
+
+function unselect(row) {
+    const index = [...row.parentElement.children].indexOf(row);
+    row.style.backgroundColor = index % 2 === 1 ? "lightgrey" : "";
+}
+
+function setButtonEvents(){
+    const sampleBtn = document.getElementById("cs");
+    sampleBtn.onclick = () => SendSamples();
+}
+
+function SendSamples(){
+    console.log(sampleData);
+    window.electronAPI.submitSamples(sampleData);
+    window.close();
 }
