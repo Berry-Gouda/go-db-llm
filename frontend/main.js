@@ -19,6 +19,7 @@ let gohost = "";
 let goport = "";
 let baseURL = "";
 
+//start up and shutdown functions and events
 app.whenReady().then(() =>{
     start();
 
@@ -40,6 +41,13 @@ function start(){
     win.loadFile(basePath + "index.html");
 }
 
+app.on("window-all-closed", () => {
+    if(process.platform !== "darwin"){
+        app.quit()
+    }
+});
+
+//credential submit and retreive
 ipcMain.on("submit-creds", (event, data) => {
     const parsed = JSON.parse(data);
     if(parsed.save){
@@ -72,12 +80,6 @@ ipcMain.on("load-creds", (event) => {
     createDBConnection();
 });
 
-app.on("window-all-closed", () => {
-    if(process.platform !== "darwin"){
-        app.quit()
-    }
-});
-
 function loadCreds(){
     user = store.get('user');
     db = store.get('db');
@@ -88,6 +90,7 @@ function loadCreds(){
     goport = store.get('goport');
 }
 
+//connection init functions
 function buildGoURL(){
     baseURL = "http://" + gohost + ":" + goport + "/"
 }
@@ -132,6 +135,7 @@ async function createDBConnection(){
     }
 }
 
+//event to handle loading main page
 ipcMain.handle("load-main",  async()=>{
     
     url = baseURL + "load-main"
@@ -157,8 +161,6 @@ ipcMain.on("open-results", (event, data) => {
             nodeIntegration: false,
         }
     });
-
-    console.log(basePath + "searchResults.html")
 
     resultsWin.loadFile(basePath + "searchResults.html")
 
@@ -213,6 +215,65 @@ ipcMain.handle("send-search", async(event, data) =>{
     return {results}
 })
 
+//Events to handle llm connections
+ipcMain.handle("start-llm", async (event)=>{
+    url = baseURL + "start-llm"
+    aiWindow = new BrowserWindow({
+        width: 1200,
+        height: 1000,
+        webPreferences:{
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, "preload.js")
+        }
+    })
+    aiWindow.loadFile(path.join(basePath, "loading.html"))
+
+    const response = await fetch(url, {
+        method: "POST",
+        headers:{
+            "Content-Type": "application/json",
+        }
+    });
+
+    if(response){
+        aiWindow.close()
+    }
+})
+
+ipcMain.handle("close-llm", async (event) =>{
+    url = baseURL + "close-llm";
+    const response = await fetch (url, {
+        method: "POST",
+        headers:{
+            "Content-Type": "application/json",
+        }
+    });
+
+    const msg = await response.json();
+    if (msg.message == 'Model Closed'){
+        aiWindow.close()
+    }
+})
+
+//Events to generate prompts and pass to llm
+ipcMain.on("open-prompt-window", (event, data) => {    
+
+    promptWindow = new BrowserWindow({
+        width: 1200,
+        height: 1500,
+        webPreferences:{
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, "preload.js")
+        }
+    })
+    promptWindow.loadFile(path.join(basePath, "promptWindow.html"))
+    promptWindow.webContents.on("did-finish-load", () => {
+        promptWindow.webContents.send("prompt-win-start-data", data)
+    })
+})
+
 ipcMain.handle("generate-query", async (event, data) =>{
     const url = baseURL + "create-query";
     try {
@@ -235,70 +296,29 @@ ipcMain.handle("generate-query", async (event, data) =>{
 
 })
 
-ipcMain.handle("start-llm", async (event)=>{
-    url = baseURL + "start-llm"
-    aiWindow = new BrowserWindow({
-        width: 1200,
-        height: 1000,
-        webPreferences:{
-            nodeIntegration: false,
-            contextIsolation: true,
-            preload: path.join(__dirname, "preload.js")
-        }
-    })
-    aiWindow.loadFile(path.join(basePath, "loading.html"))
-
-    const response = await fetch(url, {
-        method: "POST",
-        headers:{
-            "Content-Type": "application/json",
-        }
-    });
-
-    const msg = await response.json();
-    if (msg.message == 'Model loaded'){
-        aiWindow.loadFile(path.join(basePath, "promptWindow.html"))
-    }
-})
-
-ipcMain.handle("close-llm", async (event) =>{
-    url = baseURL + "close-llm";
-    const response = await fetch (url, {
-        method: "POST",
-        headers:{
-            "Content-Type": "application/json",
-        }
-    });
-
-    const msg = await response.json();
-    if (msg.message == 'Model Closed'){
-        aiWindow.close()
-    }
-})
-
-ipcMain.on("open-prompt-window", (event, data) => {    
-
-    promptWindow = new BrowserWindow({
-        width: 1200,
-        height: 1500,
-        webPreferences:{
-            nodeIntegration: false,
-            contextIsolation: true,
-            preload: path.join(__dirname, "preload.js")
-        }
-    })
-    promptWindow.loadFile(path.join(basePath, "promptWindow.html"))
-    promptWindow.webContents.on("did-finish-load", () => {
-        promptWindow.webContents.send("prompt-win-start-data", data)
-    })
-})
-
 ipcMain.on("submit-samples", (event, data) => {
     console.log("Samples")
     console.log(data)
     if (promptWindow){
         promptWindow.webContents.send("return-samples", data);
     }else{
+
         alert("Open Prompt Window to Send Samples")
     }
+})
+
+ipcMain.handle("send-prompt", async (event, data) => {
+
+    console.log(data)
+
+    url = baseURL + "send-full-prompt"
+    const response = await fetch(url, {
+        method: "POST",
+        headers:{
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+    })
+    const result = await response.json();
+    console.log(result)
 })

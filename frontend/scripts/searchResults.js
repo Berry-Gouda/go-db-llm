@@ -19,6 +19,13 @@ window.electronAPI.onResultsData((data) => {
 
 });
 
+function setButtonEvents(){
+    const sampleBtn = document.getElementById("cs");
+    sampleBtn.onclick = () => SendSamples();
+}
+
+//display search results function adds the click events to select rows
+//KNOWN BUG--Leaving a results page via pagination and coming back needs to highlight sampled rows again.
 function DisplaySearchResults(){
     const tH3 = document.querySelector("#search-results h3");
     const thead = document.querySelector("#search-table thead");
@@ -62,6 +69,7 @@ function DisplaySearchResults(){
     renderPagination()
 }
 
+//builds the pagination buttons
 function renderPagination(){
     const paginationContainer = document.getElementById("pagination");
     paginationContainer.innerHTML = "";
@@ -98,6 +106,8 @@ function renderPagination(){
     }
 }
 
+//
+//decreases page displayed
 function reduceCurrentPage(){
     if (currentPage <= 1){
         return
@@ -108,6 +118,7 @@ function reduceCurrentPage(){
     }
 }
 
+//increases page displayed
 function increaseCurrentPage(){
     if(currentPage >= totalPages){
         return
@@ -118,6 +129,7 @@ function increaseCurrentPage(){
     }
 }
 
+//Handles selection of data for sampling adding to and removing from sample data to send.
 function rowClick(tr, data){
     if (tr.className == "selected"){
         tr.removeAttribute("class");
@@ -141,6 +153,16 @@ function removeFromSample(data){
     }
 }
 
+//sends samples to prompt gen page needs to be reworked to allow functionality with mainPage.js.
+function SendSamples(){
+    console.log(sampleData);
+    window.electronAPI.submitSamples(sampleData);
+    window.close();
+}
+
+//highlight row functions
+//Needs to be rewritten into a utility script that can be shared with other files.
+
 function highlightRow(row) {
     row.style.backgroundColor = "lightskyblue";
 }
@@ -148,15 +170,4 @@ function highlightRow(row) {
 function unselect(row) {
     const index = [...row.parentElement.children].indexOf(row);
     row.style.backgroundColor = index % 2 === 1 ? "lightgrey" : "";
-}
-
-function setButtonEvents(){
-    const sampleBtn = document.getElementById("cs");
-    sampleBtn.onclick = () => SendSamples();
-}
-
-function SendSamples(){
-    console.log(sampleData);
-    window.electronAPI.submitSamples(sampleData);
-    window.close();
 }

@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 )
 
+// variable to store mainpage info to reduce calls to db
 var MainData = &db.MainPageInfo{}
 
 func HandleCreateDBConnection(w http.ResponseWriter, r *http.Request) {
@@ -39,6 +40,7 @@ func HandleCloseDBConnection(w http.ResponseWriter, r *http.Request) {
 	db.CloseDB()
 }
 
+// Handles the gathering of general database information returns a main page info struct from db package
 func HandleLoadMainPage(w http.ResponseWriter, r *http.Request) {
 
 	DB := db.GetDBConnection()
@@ -79,6 +81,7 @@ func HandleLoadMainPage(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(MainData)
 }
 
+// Handles bulk insert request
 func HandleBulkInsert(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Invalid request method", http.StatusMethodNotAllowed)
@@ -114,6 +117,7 @@ func HandleBulkInsert(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
+// handles simple comp column search returns the results
 func HandleCompColumnSearch(w http.ResponseWriter, r *http.Request) {
 	DB := db.GetDBConnection()
 
@@ -138,6 +142,7 @@ func HandleCompColumnSearch(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(rtnData)
 }
 
+// handles creation of query request returns the data and query generated
 func HandleCreateQuery(w http.ResponseWriter, r *http.Request) {
 
 	var data db.GenerateQueryRequest

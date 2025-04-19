@@ -16,4 +16,5 @@ contextBridge.exposeInMainWorld("electronAPI", {
     onQueryData: (callback) => ipcRenderer.on("prompt-query-return", (event, data) => callback(data)),
     submitSamples: (data) => ipcRenderer.send("submit-samples", (data)),
     onRecieveSamples: (callback) => ipcRenderer.on("return-samples", (event, data) => callback(data)),
+    sendFullPrompt: (data) => ipcRenderer.invoke("send-prompt", (event, data)),
 });

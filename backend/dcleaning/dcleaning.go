@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// converts fractions to decimal
 func FractionStrToDec(frac string) (float64, error) {
 
 	splitFrac := strings.Split(frac, "/")

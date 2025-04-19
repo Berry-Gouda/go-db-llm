@@ -4,6 +4,8 @@ let totalData
 let isSearch = false
 let sResults = null
 
+
+//page loading functions and events
 document.addEventListener("DOMContentLoaded", async() => {
     try{
         const data = await window.electronAPI.loadMain();
@@ -28,6 +30,94 @@ function UpdateHeader(dbName){
     const header = document.getElementById("db-name");
     header.innerHTML = dbName;
 }
+
+function SetButtonListeners(){
+    const t20 = document.getElementById("t20");
+    const bi = document.getElementById("bi");
+    const sLLM = document.getElementById("sLLM");
+    const cLLM = document.getElementById("cLLM");
+    const opg = document.getElementById("opg");
+    const search = document.getElementById("search");
+
+    t20.addEventListener("click", ShowResults);
+    bi.addEventListener("click", BulkInsert);
+    sLLM.addEventListener("click", StartLLM);
+    cLLM.addEventListener("click", CloseLLM);
+    opg.addEventListener("click", OpenPromptWindow);
+    search.addEventListener("click", SendSearch);
+}
+
+//clears search results
+function ClearSearchResults(){
+    console.log("clearSearch")
+    const tH3 = document.querySelector("#search-results h3");
+    const thead = document.querySelector("#search-table thead");
+    const tbody = document.querySelector("#search-table tbody");
+    console.log(tbody)
+    tH3.textContent = "Select table or Search for results";
+    thead.replaceChildren();
+    tbody.replaceChildren();
+}
+
+//displays search results in new window
+function ShowResults(){
+    schemaData = Object.values(totalData.tableSchema[selectedTable]).map(item => item.ColName)
+    window.electronAPI.openResults(sResults ?   data = {results: sResults.results.results, 
+                                                        schema: schemaData, 
+                                                        isSearch: isSearch} : 
+                                                data = {results: totalData.top20[selectedTable],
+                                                        schema: schemaData, 
+                                                        isSearch: isSearch})
+}
+
+//bulk insert button calls event to open a dialoge box to select the csv and sends the path to backend for insertion.
+async function BulkInsert(){
+    const msg = await window.electronAPI.bulkInsert(selectedTable);
+    alert(msg.message);
+}
+
+//sends a simple comp column search query to backend
+async function SendSearch(){
+    const input = document.getElementById("search-input");
+    searchValToSend = input.value
+    const data = {
+        table: selectedTable,
+        compColumn: selectedColumn,
+        searchVal: searchValToSend,
+    };
+
+    isSearch = true;
+    sResults = await window.electronAPI.sendSearch(data);
+
+    console.log(sResults.results)
+    
+}
+
+//start and close llm button functions
+function StartLLM(){
+    window.electronAPI.startLLM();
+}
+
+function CloseLLM(){
+    window.electronAPI.closeLLM();
+}
+
+//Opens the prompt window 
+function OpenPromptWindow(){
+
+    data = {
+        tablesOverview: totalData.tablesOverview,
+        tableSchema: totalData.tableSchema,
+        results: sResults
+    }
+
+    window.electronAPI.openPromptWindow(data)
+}
+
+//
+//Functions to build the dynamic page tables along with utility functions to manipulate selections
+//Needs to be rewritten to allow these utilities to be shared with promptGen.js
+//
 
 function UpdateTablesOverview(tAndC){
     const tOTable = document.querySelector('#tables-overview tbody');
@@ -68,30 +158,6 @@ function UpdateTablesOverview(tAndC){
         tOTable.appendChild(newRow);
         
     });
-}
-
-function unselect(tr){
-    let allRows = Array.from(tr.parentElement.children);
-    let index = allRows.indexOf(tr); 
-    tr.style.backgroundColor = index % 2 === 1 ? "lightgrey" : "";
-
-}
-
-function updateSelectedColumn(cName){
-    selectedColumn = cName
-}
-
-function updateSelectedTable(tName){
-    selectedTable = tName
-    selectedColumn = ''
-}
-
-function highlightRow(tr){
-    if(tr.style.backgroundColor == "lightskyblue"){
-        unselect(tr)
-        return
-    }
-    tr.style.backgroundColor = "lightskyblue"
 }
 
 function DisplaySelectedSchema(table){
@@ -148,79 +214,27 @@ function ClearSelectedTableSchema(){
     tBody.replaceChildren();
 }
 
-function ClearSearchResults(){
-    console.log("clearSearch")
-    const tH3 = document.querySelector("#search-results h3");
-    const thead = document.querySelector("#search-table thead");
-    const tbody = document.querySelector("#search-table tbody");
-    console.log(tbody)
-    tH3.textContent = "Select table or Search for results";
-    thead.replaceChildren();
-    tbody.replaceChildren();
+function updateSelectedTable(tName){
+    selectedTable = tName
+    selectedColumn = ''
 }
 
-function SetButtonListeners(){
-    const t20 = document.getElementById("t20");
-    const bi = document.getElementById("bi");
-    const sLLM = document.getElementById("sLLM");
-    const cLLM = document.getElementById("cLLM");
-    const opg = document.getElementById("opg");
-    const search = document.getElementById("search");
-
-    t20.addEventListener("click", ShowResults);
-    bi.addEventListener("click", BulkInsert);
-    sLLM.addEventListener("click", StartLLM);
-    cLLM.addEventListener("click", CloseLLM);
-    opg.addEventListener("click", OpenPromptWindow);
-    search.addEventListener("click", SendSearch);
+function updateSelectedColumn(cName){
+    selectedColumn = cName
 }
 
-function ShowResults(){
-    schemaData = Object.values(totalData.tableSchema[selectedTable]).map(item => item.ColName)
-    window.electronAPI.openResults(sResults ?   data = {results: sResults.results.results, 
-                                                        schema: schemaData, 
-                                                        isSearch: isSearch} : 
-                                                data = {results: totalData.top20[selectedTable],
-                                                        schema: schemaData, 
-                                                        isSearch: isSearch})
-}
 
-async function BulkInsert(){
-    const msg = await window.electronAPI.bulkInsert(selectedTable);
-    alert(msg.message);
-}
-
-async function SendSearch(){
-    const input = document.getElementById("search-input");
-    searchValToSend = input.value
-    const data = {
-        table: selectedTable,
-        compColumn: selectedColumn,
-        searchVal: searchValToSend,
-    };
-
-    isSearch = true;
-    sResults = await window.electronAPI.sendSearch(data);
-
-    console.log(sResults.results)
-    
-}
-
-function StartLLM(){
-    window.electronAPI.startLLM();
-}
-
-function CloseLLM(){
-    window.electronAPI.closeLLM();
-}
-
-function OpenPromptWindow(){
-
-    data = {
-        tablesOverview: totalData.tablesOverview,
-        tableSchema: totalData.tableSchema,
-        results: sResults
+function highlightRow(tr){
+    if(tr.style.backgroundColor == "lightskyblue"){
+        unselect(tr)
+        return
     }
+    tr.style.backgroundColor = "lightskyblue"
+}
 
-    window.electronAPI.openPromptWindow(data)
+function unselect(tr){
+    let allRows = Array.from(tr.parentElement.children);
+    let index = allRows.indexOf(tr); 
+    tr.style.backgroundColor = index % 2 === 1 ? "lightgrey" : "";
+
 }

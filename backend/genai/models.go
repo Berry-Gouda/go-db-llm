@@ -7,29 +7,31 @@ import (
 	"sync"
 )
 
-type DataToGeneratePrompt struct {
-	ColumnsInOrder []string            `json:"columns"`
-	ColData        map[string][]string `json:"colData"`
-	TextPrompt     string              `json:"textPrompt"`
-	SampleData     string              `json:"sampleData"`
-	SampleResults  string              `json:"sampleResults"`
-	On             string              `json:"on"`
-	Where          string              `json:"where"`
-}
-
-type ProcessedPrompt struct {
-	P string `json:"prompt"`
-}
-
 type LlamaProcess struct {
-	Cmd     *exec.Cmd
-	Stdin   *bufio.Writer
-	Stdout  *bufio.Scanner
-	Stderr  *bufio.Scanner
-	Ch      chan string
-	Cancel  context.CancelFunc
-	Mu      sync.Mutex
-	Cond    *sync.Cond
-	Running bool
-	Done    chan struct{}
+	Cmd            *exec.Cmd
+	Stdin          *bufio.Writer
+	Stdout         *bufio.Scanner
+	Stderr         *bufio.Scanner
+	Ch             chan string
+	Cancel         context.CancelFunc
+	Mu             sync.Mutex
+	Cond           *sync.Cond
+	Running        bool
+	OutputFinished bool
+	Done           chan struct{}
+	Output         []string `json:"outputResults"`
+}
+
+type PromptResponse struct {
+	Results []string `json:"results"`
+	Columns []string `json:"columns"`
+}
+
+// Data for creation of full prompt
+type PromptToProcessRequest struct {
+	Query    string              `json:"query"`
+	Columns  []string            `json:"columns"`
+	RawData  []map[string]string `json:"rawData"`
+	Instruct string              `json:"instruct"`
+	Example  [][]string          `json:"example"`
 }

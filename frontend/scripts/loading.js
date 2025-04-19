@@ -1,3 +1,5 @@
+//simple loading animation while llm starts up
+
 document.addEventListener("DOMContentLoaded", function(){
     const loadingHeader = document.getElementById("header")
     let dots = 0

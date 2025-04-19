@@ -10,6 +10,8 @@ import (
 
 func main() {
 	staticDir, _ := filepath.Abs(filepath.Join("../", "frontend"))
+
+	//handle function calls
 	http.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir(staticDir))))
 	http.HandleFunc("/create-db-connection", handlers.HandleCreateDBConnection)
 	http.HandleFunc("/close-db", handlers.HandleCloseDBConnection)
@@ -19,6 +21,8 @@ func main() {
 	http.HandleFunc("/create-query", handlers.HandleCreateQuery)
 	http.HandleFunc("/start-llm", handlers.HandleStartLlama)
 	http.HandleFunc("/close-llm", handlers.HandleCloseLlama)
+	http.HandleFunc("/send-full-prompt", handlers.HandleProcessPrompt)
 	fmt.Println("Go Server Running on http://localhost:8080")
+	//Error
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

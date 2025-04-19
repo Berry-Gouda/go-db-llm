@@ -30,6 +30,7 @@ type SearchResults struct {
 	Query   string              `json:"query"`
 }
 
+// struct to store and send the main page data back to front end after a connection initializes.
 type MainPageInfo struct {
 	DBName        string                         `json:"dbName"`
 	TableOverview map[string]uint32              `json:"tablesOverview"`
@@ -77,18 +78,21 @@ func ConvertToCamelCase(input string) string {
 	return strings.Join(parts, "")
 }
 
+// struct to decode json for COmp column search
 type CompColumnSearchRequest struct {
 	Table       string `json:"table"`
 	CompColumn  string `json:"compColumn"`
 	SearchValue string `json:"searchVal"`
 }
 
+// struct to decode json for query generation request
 type GenerateQueryRequest struct {
 	Columns  []string   `json:"columnsInOrder"`
 	JoinData []JoinData `json:"joinData"`
 	Where    WhereData  `json:"where"`
 }
 
+// Join data struct
 type JoinData struct {
 	FromTable  string `json:"fTable"`
 	FromColumn string `json:"fCol"`
@@ -98,6 +102,7 @@ type JoinData struct {
 	CompVal    string `json:"compVal"`
 }
 
+// where data struct
 type WhereData struct {
 	Column string `json:"column"`
 	Opp    string `json:"opperator"`

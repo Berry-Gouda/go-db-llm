@@ -7,6 +7,7 @@ import (
 	"strings"
 )
 
+// Gets the init data when a connection is intiated
 func GetDBTableNames(db *sql.DB) ([]string, error) {
 	var tNames []string
 
@@ -91,6 +92,7 @@ func GetTableSchema(db *sql.DB, table string) ([]TableSchemaInfo, error) {
 	return tableInfo, nil
 }
 
+// top rows from a table for quick visualization of data.
 func GetTopRows(db *sql.DB, table string, count int) ([]map[string]string, error) {
 
 	query := fmt.Sprintf("SELECT * FROM %s LIMIT %d", table, count)
@@ -149,6 +151,7 @@ func BulkInsert(db *sql.DB, tName string, data []interface{}, structType reflect
 		return fmt.Errorf("no records to insert")
 	}
 
+	//gets the column order to enforce map order
 	columnOrder, err := getColumnOrder(db, tName)
 	if err != nil {
 		return err
@@ -157,6 +160,7 @@ func BulkInsert(db *sql.DB, tName string, data []interface{}, structType reflect
 	numCols := len(columnOrder)
 	numRows := len(data)
 
+	//loop to insert into table batching records to not overflow the limits -- default 1k
 	for start := 0; start < numRows; start += batchSize {
 		end := start + batchSize
 		if end > numRows {
@@ -165,15 +169,18 @@ func BulkInsert(db *sql.DB, tName string, data []interface{}, structType reflect
 
 		rowPlaceholders := make([]string, end-start)
 
+		//builds the row placeholders string for insert query
 		for i := range rowPlaceholders {
 			rowPlaceholders[i] = "(" + strings.Repeat("?,", numCols)[:(numCols*2)-1] + ")"
 		}
 
+		//joins all of the placeholders with , inbetween
 		placeholders := strings.Join(rowPlaceholders, ", ")
 
 		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES %s",
 			tName, strings.Join(columnOrder, ", "), placeholders)
 
+		//inserts the values into a slice maintaining integrity of data type
 		var values []interface{}
 		for _, record := range data[start:end] {
 			recordValue := reflect.ValueOf(record)
@@ -188,11 +195,13 @@ func BulkInsert(db *sql.DB, tName string, data []interface{}, structType reflect
 			}
 		}
 
+		//prepares the query
 		stmt, err := db.Prepare(query)
 		if err != nil {
 			return err
 		}
 
+		//inserts the data into the placeholder ?
 		_, err = stmt.Exec(values...)
 		if err != nil {
 			stmt.Close()
@@ -203,6 +212,7 @@ func BulkInsert(db *sql.DB, tName string, data []interface{}, structType reflect
 	return err
 }
 
+// get column order utility function to enforce map order.
 func getColumnOrder(db *sql.DB, tName string) ([]string, error) {
 
 	query := fmt.Sprintf(`
@@ -228,6 +238,8 @@ func getColumnOrder(db *sql.DB, tName string) ([]string, error) {
 	return columns, nil
 }
 
+// preforms a simple comp column search returning all columns from a single table.
+// does a "fuzzy" search if non key column
 func CompColumnSearch(db *sql.DB, table string, searchVal string, compColumn string) ([]map[string]string, error) {
 
 	var query string
@@ -264,6 +276,7 @@ func CompColumnSearch(db *sql.DB, table string, searchVal string, compColumn str
 
 }
 
+// checks if a column is key refrence
 func checkIfColumnIsKeyRefrence(db *sql.DB, tName string, colName string) (bool, error) {
 	var count int
 
@@ -282,6 +295,7 @@ func checkIfColumnIsKeyRefrence(db *sql.DB, tName string, colName string) (bool,
 	return count > 0, nil
 }
 
+// Function to build a query sent from the prompt gen window
 func BuildQuery(db *sql.DB, data GenerateQueryRequest) ([]map[string]string, string, error) {
 
 	var query string
@@ -312,7 +326,7 @@ func BuildQuery(db *sql.DB, data GenerateQueryRequest) ([]map[string]string, str
 
 	query = selectStatement + joinStatement + whereStatement
 
-	results, err := exicuteQuery(db, data.Columns, query, whereValue)
+	results, err := ExicuteQuery(db, data.Columns, query, whereValue)
 	if err != nil {
 		return nil, "", err
 	}
@@ -320,6 +334,7 @@ func BuildQuery(db *sql.DB, data GenerateQueryRequest) ([]map[string]string, str
 	return results, query, nil
 }
 
+// validates the query request data
 func validateGenQueryData(db *sql.DB, columns []string) bool {
 
 	for _, val := range columns {
@@ -347,11 +362,13 @@ func validateGenQueryData(db *sql.DB, columns []string) bool {
 	return true
 }
 
+// Builds the select statement
 func buildSelectStatement(cols []string) string {
 	statement := fmt.Sprintf(`SELECT %s FROM %s`, strings.Join(cols, ", "), strings.Split(cols[0], ".")[0])
 	return statement
 }
 
+// adds the join statements
 func buildJoinStatement(jData []JoinData) string {
 
 	var joinString string
@@ -367,6 +384,7 @@ func buildJoinStatement(jData []JoinData) string {
 	return joinString
 }
 
+// builds the where statement
 func buildWhereStatement(wData WhereData) (string, string) {
 
 	var where string
@@ -393,7 +411,8 @@ func buildWhereStatement(wData WhereData) (string, string) {
 
 }
 
-func exicuteQuery(db *sql.DB, columns []string, query string, compVal string) ([]map[string]string, error) {
+// exitcutes the query
+func ExicuteQuery(db *sql.DB, columns []string, query string, compVal string) ([]map[string]string, error) {
 	rows, err := db.Query(query, compVal)
 	if err != nil {
 		return nil, err

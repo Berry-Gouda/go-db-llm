@@ -12,9 +12,11 @@ import (
 	"sync"
 )
 
+// global variables.
 var llamaMu sync.Mutex
 var Llama *LlamaProcess
 
+// starts the python script to load llama
 func StartPythonLoadLlama() (*LlamaProcess, error) {
 
 	llamaMu.Lock()
@@ -26,13 +28,16 @@ func StartPythonLoadLlama() (*LlamaProcess, error) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 
+	//path to python interetor and the script to be called
 	pythonPath := "/media/bg-labs/usb/fms/venv/bin/python3"
 	scriptPath := "/media/bg-labs/usb/go-db-llm/backend/genai/llama_interface.py"
 
+	//declares the command session and sets env variables
 	cmd := exec.Command(pythonPath, scriptPath)
 	cmd.Env = append(os.Environ(), "RANK=0")
 	cmd.Env = append(cmd.Env, "PYTHONUNBUFFERED=1")
 
+	//input pipe
 	stdinPipe, err := cmd.StdinPipe()
 	if err != nil {
 		fmt.Println("Error getting stdin pipe:", err)
@@ -40,6 +45,7 @@ func StartPythonLoadLlama() (*LlamaProcess, error) {
 		return nil, err
 	}
 
+	//output pipe
 	stdoutPipe, err := cmd.StdoutPipe()
 	if err != nil {
 		fmt.Println("Error getting stdout pipe:", err)
@@ -47,6 +53,7 @@ func StartPythonLoadLlama() (*LlamaProcess, error) {
 		return nil, err
 	}
 
+	//error pipe
 	stderrPipe, err := cmd.StderrPipe()
 	if err != nil {
 		fmt.Println("Error getting stderr pipe:", err)
@@ -54,6 +61,7 @@ func StartPythonLoadLlama() (*LlamaProcess, error) {
 		return nil, err
 	}
 
+	//creates and sets the llama process struct
 	process := &LlamaProcess{
 		Cmd:    cmd,
 		Stdin:  bufio.NewWriter(stdinPipe),
@@ -62,15 +70,18 @@ func StartPythonLoadLlama() (*LlamaProcess, error) {
 		Ch:     make(chan string),
 		Cancel: cancel,
 	}
+	//creates the condition and sets global to this process.
 	process.Cond = sync.NewCond(&process.Mu)
 	Llama = process
 
+	//starts the command
 	if err := cmd.Start(); err != nil {
 		cancel()
 		Llama = nil
 		return nil, err
 	}
 
+	//starts go routines for writing input and reading output.
 	go scanStderr(ctx)
 	go scanStdout(ctx)
 	go writeStdin(ctx)
@@ -94,6 +105,7 @@ func closeLlama() {
 	Llama = nil
 }
 
+// reads error stream and outputs to terminal
 func scanStderr(ctx context.Context) {
 	for Llama.Stderr.Scan() {
 		select {
@@ -105,7 +117,10 @@ func scanStderr(ctx context.Context) {
 	}
 }
 
+// reads data from output stream and prints them to terminal
 func scanStdout(ctx context.Context) {
+
+	var output []string
 	for Llama.Stdout.Scan() {
 		select {
 		case <-ctx.Done():
@@ -113,14 +128,19 @@ func scanStdout(ctx context.Context) {
 		default:
 			line := Llama.Stdout.Text()
 			if line == "Successful Loading of Model" {
-				Llama.Mu.Lock()
 				Llama.Running = true
 				Llama.Cond.Broadcast()
-				Llama.Mu.Unlock()
+				continue
 			}
 			if line == "Model Unloaded" {
 				closeLlama()
 			}
+			if line == "End Output" {
+				Llama.OutputFinished = true
+				Llama.Cond.Broadcast()
+				continue
+			}
+			Llama.Output = append(output, line)
 			fmt.Println(line)
 		}
 	}
@@ -129,6 +149,7 @@ func scanStdout(ctx context.Context) {
 	}
 }
 
+// writes data to input stream
 func writeStdin(ctx context.Context) {
 	for {
 		select {

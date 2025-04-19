@@ -44,12 +44,23 @@
 
             <div id="prompt-checklist" class="outlined-1-col">
                 <h3>Prompt Checklist</h3>
+                <table class="overview-table" id="selected-t-overview">
+                    <thead>
+                        <th>Tasks</th>
+                    </thead>
+                    <tbody>
+                        <tr id="qb-check"><td>Query Built</td></tr>
+                        <tr id="ei-check"><td>Example Input</td></tr>
+                        <tr id="eo-check"><td>Example Output</td></tr>
+                        <tr id="i-check"><td>Instructions</td></tr>
+                    </tbody>
+                </table>
             </div>
 
             <div class="mini-grid-container" id="row2">
 
                 <div id="query-data-div" class="outlined-1-col">
-                    <h3>Data to Send</h3>
+                    <h3>Query Columns</h3>
                     <table id="query-data-table" class="overview-table">
                         <thead>
                             <th>Col Name</th>
@@ -72,18 +83,24 @@
                     </table>
                 </div>
 
-                <div class="outlined-1-col">
-                    <h3>Data Samples</h3>
-                    <table id="samples">
+                <div id="input-div" class="outlined-1-col">
+                    <h3>Input Samples</h3>
+                    <table id="samples" class="overview-table">
+                        <thead>
+                            <th>Data</th>
+                        </thead>
                         <tbody>
 
                         </tbody>
                     </table>
                 </div>
 
-                <div class="outlined-1-col">
-                    <h3>Result Expected</h3>
-                    <table id="result-exp">
+                <div id="output-div" class="outlined-1-col">
+                    <h3>Output Expected</h3>
+                    <table id="result-exp" class="overview-table">
+                        <thead>
+                            <th>Data</th>
+                        </thead>
                         <tbody>
                             
                         </tbody>
@@ -96,6 +113,8 @@
                 <input id="input-field" type="text">
             </div>
 
+
+
             <div id="hidden-btns">
                 <button class="comp-btn" data-op="=">=</button>
                 <button class="comp-btn" data-op=">">></button>
@@ -104,7 +123,8 @@
                 <button class="comp-btn" data-op="<=">&lt;=</button>
             </div>
 
-            <div id="submit-div" class="">
+            <div id="submit-div">
+                <p id="feedback"></p>
                 <button id="sub-btn">Complete Join</button>
             </div>
 
@@ -115,6 +135,9 @@
                 <button id="rj">Right Join</button>
                 <button id="w">Where</button>
                 <button id="sds">Sample Data</button>
+                <button id="fso">Format Sample Output</button>
+                <button id="ei">Enter Instruction Prompt</button>
+                <button id="sfd">Send All Data To LLM</button>
                 <button id="cd">Clear Data</button>
             </div>
         </div>

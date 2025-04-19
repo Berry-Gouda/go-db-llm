@@ -23,6 +23,7 @@ def main():
 
     print("Successful Loading of Model")
 
+    #example of prompt to send
     #dialogs: List[Dialog] = [
     #    [{"role": "user", "content": "remove all words and symbols that are not a units or amounts make sure to include units and their measure that have spaces between them. Data like cookies or ribs count as a unit. Don't reply with any extra information"
     #   "For example [1, 1/2 Cup(aprx. 8ml) 243g] you should respond [1, 1/2Cup 8ml 243g]"
@@ -31,11 +32,10 @@ def main():
     #     ]
 
     cin = input()
-    while cin != 'Exit':
+    while cin != "{'prompt': 'Exit'}":
 
         data = json.loads(cin)
 
-        print("\n\nFrom Python ->", data, "\n\n")
         dialogs: List[Dialog] = [[data]]
 
         results = generator.chat_completion(
@@ -44,16 +44,17 @@ def main():
             temperature=temp,
             top_p=top_p
         )
-        print("\n\nFROM PYTHON RESULT\n\n",results)
 
         for dialog, result in zip(dialogs, results):
             for msg in dialog:
-                print(f"{msg['role']}: {msg['content']}\n")
-                print(f">{result['generation']['role']}: {result['generation']['content']}")
-                print("\n=========================================================================================\n")
+                print(f"{result['generation']['content']}")
 
         dialogs: List[Dialog] = []
+        
 
+        if sys.stdin.isatty():
+            print("End Output")
+            
         cin = input()
 
     quit()
