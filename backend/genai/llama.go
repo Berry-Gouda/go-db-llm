@@ -29,8 +29,8 @@ func StartPythonLoadLlama() (*LlamaProcess, error) {
 	ctx, cancel := context.WithCancel(context.Background())
 
 	//path to python interetor and the script to be called
-	pythonPath := "/media/bg-labs/usb/fms/venv/bin/python3"
-	scriptPath := "/media/bg-labs/usb/go-db-llm/backend/genai/llama_interface.py"
+	pythonPath := ""
+	scriptPath := ""
 
 	//declares the command session and sets env variables
 	cmd := exec.Command(pythonPath, scriptPath)

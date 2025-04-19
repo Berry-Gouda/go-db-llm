@@ -5,8 +5,9 @@ from llama import Dialog, Llama
 
 
 def main():
-    ckpt_dir='/media/bg-labs/usb/go-db-llm/backend/genai/Meta-Llama-3-8B-Instruct'
-    tok_path='/media/bg-labs/usb/go-db-llm/backend/genai/Meta-Llama-3-8B-Instruct/tokenizer.model'
+    #set these for your system and model
+    ckpt_dir=''
+    tok_path=''
     max_seq_len=512
     max_batch_size=6
     max_gen_len: Optional[int] = None
