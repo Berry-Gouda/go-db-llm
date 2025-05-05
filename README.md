@@ -70,7 +70,7 @@ go mod tidy</pre>
 
 This project is under active development. New features, bug fixes, and refinements to be released bi-weekly starting May 5, 2025.<br><br>Last Update April 19, 2025
 
-- ### Current Development - Planned Release (May, 5, 2025)
+- ### Current Development - Planned Release (May, 7, 2025)
     - General Bug Fixes
     - Refactoring of current JS to reduce code base
     - Fix Concurrency Errors
