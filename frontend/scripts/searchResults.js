@@ -155,7 +155,6 @@ function removeFromSample(data){
 
 //sends samples to prompt gen page needs to be reworked to allow functionality with mainPage.js.
 function SendSamples(){
-    console.log(sampleData);
     window.electronAPI.submitSamples(sampleData);
     window.close();
 }

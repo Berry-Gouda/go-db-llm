@@ -17,7 +17,6 @@ document.addEventListener("DOMContentLoaded", async() => {
     }
     UpdatePageData(totalData);
     SetButtonListeners();
-    console.log(totalData);
 })
 
 function UpdatePageData(data){
@@ -26,7 +25,6 @@ function UpdatePageData(data){
 }
 
 function UpdateHeader(dbName){
-    console.log(dbName)
     const header = document.getElementById("db-name");
     header.innerHTML = dbName;
 }
@@ -49,11 +47,9 @@ function SetButtonListeners(){
 
 //clears search results
 function ClearSearchResults(){
-    console.log("clearSearch")
     const tH3 = document.querySelector("#search-results h3");
     const thead = document.querySelector("#search-table thead");
     const tbody = document.querySelector("#search-table tbody");
-    console.log(tbody)
     tH3.textContent = "Select table or Search for results";
     thead.replaceChildren();
     tbody.replaceChildren();
@@ -88,8 +84,6 @@ async function SendSearch(){
 
     isSearch = true;
     sResults = await window.electronAPI.sendSearch(data);
-
-    console.log(sResults.results)
     
 }
 
@@ -143,7 +137,6 @@ function UpdateTablesOverview(tAndC){
             if(oldSelected === newRow){
                 ClearSelectedTableSchema()
                 updateSelectedTable('')
-                console.log(selectedTable)
                 return
             }
 
@@ -152,7 +145,6 @@ function UpdateTablesOverview(tAndC){
             highlightRow(newRow)
             ClearSelectedTableSchema()
             DisplaySelectedSchema(selectedTable)
-            console.log(selectedTable)
         });
 
         tOTable.appendChild(newRow);
@@ -193,7 +185,6 @@ function DisplaySelectedSchema(table){
 
             if(oldSelected === newRow){
                 updateSelectedColumn('')
-                console.log(selectedColumn)
                 return
             }
 
@@ -204,7 +195,6 @@ function DisplaySelectedSchema(table){
 
         tBody.appendChild(newRow);
     });
-    console.log(totalData.top20[table])
 }
 
 function ClearSelectedTableSchema(){

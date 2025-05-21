@@ -43,7 +43,6 @@ window.electronAPI.onQueryData((data) => {
 
 //event to parse the samples recieved from the results page.
 window.electronAPI.onRecieveSamples((data) => {
-    console.log("Sample Data:", data)
     data.forEach((val) => {
         sampleData.push(val)
     })
@@ -144,7 +143,7 @@ function JoinCompColumn(joinMap) {
         resetSchemaDisplay();
         RemoveTableFromJoinNeeds(selectedJoin);
         updateJoinNeeds();
-        console.log(joinDataList)
+
     };
 }
 
@@ -161,7 +160,7 @@ function JoinCompValue(joinMap) {
         RemoveTableFromJoinNeeds(selectedJoin);
         updateJoinNeeds();
         input.placeholder = "";
-        console.log(joinDataList)
+
     };
 }
 
@@ -197,15 +196,14 @@ function WhereCompButtonClick(op, fullName){
     submitDiv.style.display = 'flex';
     subBtn.textContent = "Submit Where Comparison";
     input.placeholder = "Enter Where Comparison";
-    console.log("This is the JoinDataBefore", joinDataList);
     subBtn.onclick = () => {
         where.set("where", input.value);
-        console.log(input.value)
+
         where.set("column", fullName)
         submitDiv.style.display = 'none';
         input.value = '';
         input.placeholder = "";
-        console.log("This is the JoinDataAfter", joinDataList);
+
     };
 }
 
@@ -246,7 +244,6 @@ function FormatSampleOutput(){
         feedback.textContent = '';
         updateSelectedSample('');
         exampleIO.push(tempIO)
-        console.log("I/O expectations:", exampleIO)
         submitDiv.style.display = 'none'
         if( exampleIO.length == sampleData.length){
             inputs = []
@@ -285,9 +282,6 @@ function CreateTableColumnName(table, column){
 
 //Creates the JSON to send to the back end containing the data to build db query
 function CreateQueryJSON() {
-    console.log(columnsInOrder);
-    console.log(joinDataList);
-    console.log(where);
 
     // Convert where (Map) → plain object
     const whereObject = Object.fromEntries(where);
@@ -303,7 +297,6 @@ function CreateQueryJSON() {
         where: whereObject,
     };
 
-    console.log(data);
     return data;
 }
 

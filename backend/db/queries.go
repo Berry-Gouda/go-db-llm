@@ -304,8 +304,6 @@ func BuildQuery(db *sql.DB, data GenerateQueryRequest) ([]map[string]string, str
 	var whereValue string
 	var results []map[string]string
 
-	fmt.Println(data)
-
 	if !validateGenQueryData(db, data.Columns) {
 		return results, "", fmt.Errorf("%s", "Table and/or Column names could not be validated")
 	}
@@ -378,8 +376,6 @@ func buildJoinStatement(jData []JoinData) string {
 		tempString += fmt.Sprintf(" %s ON %s.%s %s %s", val.JoinTable, val.FromTable, val.FromColumn, val.Opp, val.CompVal)
 		joinString += (tempString + " ")
 	}
-
-	fmt.Println(joinString)
 
 	return joinString
 }

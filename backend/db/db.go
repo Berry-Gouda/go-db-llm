@@ -32,7 +32,6 @@ func initDB(user string, pass string, host string, port string, dbname string) e
 
 	DB = db
 	dbName = dbname
-	fmt.Println(dbName)
 	return nil
 }
 

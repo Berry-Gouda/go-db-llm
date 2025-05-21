@@ -129,7 +129,6 @@ func HandleCompColumnSearch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Println(data)
 	results, err := db.CompColumnSearch(DB, data.Table, data.SearchValue, data.CompColumn)
 	if err != nil {
 		http.Error(w, "failed to get results", http.StatusExpectationFailed)

@@ -68,8 +68,6 @@ ipcMain.on("submit-creds", (event, data) => {
     gohost = parsed.gohost;
     goport = parsed.goport;
 
-    console.log(data)
-
     buildGoURL();
     createDBConnection();
 });
@@ -297,8 +295,7 @@ ipcMain.handle("generate-query", async (event, data) =>{
 })
 
 ipcMain.on("submit-samples", (event, data) => {
-    console.log("Samples")
-    console.log(data)
+
     if (promptWindow){
         promptWindow.webContents.send("return-samples", data);
     }else{
@@ -309,7 +306,6 @@ ipcMain.on("submit-samples", (event, data) => {
 
 ipcMain.handle("send-prompt", async (event, data) => {
 
-    console.log(data)
 
     url = baseURL + "send-full-prompt"
     const response = await fetch(url, {
@@ -320,5 +316,4 @@ ipcMain.handle("send-prompt", async (event, data) => {
         body: JSON.stringify(data),
     })
     const result = await response.json();
-    console.log(result)
 })
