@@ -1,3 +1,5 @@
+
+
 let compColumn = ''
 let currentPage = 1;
 const resultsPerPage = 20;
