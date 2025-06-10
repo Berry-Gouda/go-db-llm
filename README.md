@@ -68,10 +68,9 @@ go mod tidy</pre>
 
 ## Continued Development
 
-This project is under active development. New features, bug fixes, and refinements to be released bi-weekly<br><br>Last Update May 21, 2025
+This project is under active development. New features, bug fixes, and refinements to be released bi-weekly<br><br>Last Update June 10, 2025
 
 - ### Current Development - Planned Release (June 4, 2025)
-    - Refactoring of current JS to reduce code base
     - Fix Concurrency Errors
     - Create Web Socket Connect
 

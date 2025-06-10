@@ -1,25 +1,17 @@
-
+import * as utils from './utils.js'
 
 let compColumn = ''
 let currentPage = 1;
 const resultsPerPage = 20;
-let searchResults = [];
-let columnNames = [];
 let totalPages = -1;
-let rowCount;
-let tData;
-
 let sampleData = []
 
-
-window.electronAPI.onResultsData((data) => {
-    tData = data
-    totalPages = Math.ceil(tData.results.length/resultsPerPage)
-
+document.addEventListener("DOMContentLoaded", () =>{ 
     setButtonEvents();
     DisplaySearchResults();
-
 });
+
+window.electronAPI.
 
 function setButtonEvents(){
     const sampleBtn = document.getElementById("cs");
@@ -37,7 +29,7 @@ function DisplaySearchResults(){
     thead.innerHTML = ""
     tbody.innerHTML = ""
 
-    const columns = tData.schema
+    const columns = utils.dbData.tableSchema[""]
 
     tH3.textContent = tData.isSearch ? "Search Results" : "Top 20 Rows";
 

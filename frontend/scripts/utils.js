@@ -1,6 +1,17 @@
 export let selectedTable = '', selectedColumn = '', selectedJoin = '', fromTable = '', selectedSample = '';
 export let columnsInOrder = [], displayColumnsInOrder = [], joinDataList = [], tablesNeedingJoins = [];
-export let tData = {}
+export let dbData = {}
+
+document.addEventListener("DOMContentLoaded", init);
+
+function init(){
+    setData();
+};
+
+export async function setData(){
+    dbData = await window.electronAPI.getGlobalData()
+    console.log(dbData)
+}
 
 export function resetSchemaDisplay() {
     updateSelectedColumn('');
@@ -11,8 +22,6 @@ export function resetSchemaDisplay() {
 //
 //dynamic table generation updates including row highlights
 //also contains utility functions to manipulate states.
-//
-//needs to be rewritten into a utility script that can be shared with the mainpage.js script.
 
 export function updateSampleDataTable(data){
     const sampleTable = document.querySelector("#samples tbody");
@@ -56,10 +65,10 @@ export function updateQueryCols() {
     });
 }
 
-export function UpdateTablesOverview(tAndC) {
+export function UpdateTablesOverview() {
     const tbody = document.querySelector('#tables-overview tbody');
     tbody.innerHTML = '';
-    Object.entries(tAndC).forEach(([key, value]) => {
+    Object.entries(dbData.tablesOverview).forEach(([key, value]) => {
         const row = document.createElement('tr');
         row.innerHTML = `<td>${key}</td><td>${value}</td>`;
         setRowClickHighlight(row, "t-selected", updateSelectedTable);
@@ -77,7 +86,7 @@ export function DisplaySelectedSchema(table) {
     heading.textContent = `${table} Schema`;
     tBody.innerHTML = '';
 
-    Object.values(tData.tableSchema[table]).forEach(col => {
+    Object.values(dbData.tableSchema[table]).forEach(col => {
         const row = document.createElement('tr');
         row.innerHTML = `
             <td>${col.ColName}</td>
@@ -140,10 +149,6 @@ export function ClearSearchResults(){
     tH3.textContent = "Select table or Search for results";
     thead.replaceChildren();
     tbody.replaceChildren();
-}
-
-export function setTData(data){
-    tData = data
 }
 
 export function areMapsEqual(map1, map2){

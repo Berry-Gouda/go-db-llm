@@ -4,6 +4,23 @@ const store = new Store({name: 'creds'});
 const {dialog} = require("electron");
 const path = require("path");
 
+let dbData = {
+            "dbName":"",
+            "tableSchema":"",
+            "tablesOverview":"",
+            "top20":"",
+            "searchResults":"",
+};
+
+ipcMain.handle('get-dbData', async () => {
+    return dbData;
+});
+
+ipcMain.handle('set-dbData', async(event, data)=>{
+    dbData = data;
+    console.log(dbData)
+});
+
 let win;
 let aiWindow;
 let promptWindow;
@@ -210,7 +227,8 @@ ipcMain.handle("send-search", async(event, data) =>{
     });
 
     const results = await response.json();
-    return {results}
+    dbData.searchResults = JSON.parse(results)
+    
 })
 
 //Events to handle llm connections
@@ -255,7 +273,7 @@ ipcMain.handle("close-llm", async (event) =>{
 })
 
 //Events to generate prompts and pass to llm
-ipcMain.on("open-prompt-window", (event, data) => {    
+ipcMain.on("open-prompt-window", (event) => {    
 
     promptWindow = new BrowserWindow({
         width: 1200,
@@ -267,9 +285,6 @@ ipcMain.on("open-prompt-window", (event, data) => {
         }
     })
     promptWindow.loadFile(path.join(basePath, "promptWindow.html"))
-    promptWindow.webContents.on("did-finish-load", () => {
-        promptWindow.webContents.send("prompt-win-start-data", data)
-    })
 })
 
 ipcMain.handle("generate-query", async (event, data) =>{

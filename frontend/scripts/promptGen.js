@@ -1,5 +1,7 @@
+import * as utils from './utils.js'
+
 //selected table variables, arrays containing page data, and page element refrences
-let tData, opBtnDiv, submitDiv, subBtn, input, feedback;
+let opBtnDiv, submitDiv, subBtn, input, feedback;
 
 //data for query and prompt
 let where = new Map([["column", ""],["opperator", ""],["where", ""]])
@@ -17,13 +19,9 @@ document.addEventListener("DOMContentLoaded", () => {
     input = document.getElementById("input-field");
     feedback = document.getElementById("feedback")
     setupButtonEvents();
+    utils.UpdateTablesOverview();
 });
-
-//event to populate the starting page data when recieved.
-window.electronAPI.onPromptData((data) => {
-    tData = data;
-    UpdateTablesOverview(data.tablesOverview);
-});
+    
 
 //event to parse and the data from creating the db query opens the results window via api openResults.
 window.electronAPI.onQueryData((data) => {

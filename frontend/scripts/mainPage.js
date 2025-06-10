@@ -1,10 +1,9 @@
 import * as utils from './utils.js'
 
-let totalData
 let searchValToSend = ""
+let searchedTable = ""
 let schemaData
 let isSearch = false
-let sResults = null
 
 
 //page loading functions and events
@@ -12,20 +11,19 @@ document.addEventListener("DOMContentLoaded", async() => {
     try{
         const data = await window.electronAPI.loadMain();
         const parsedData = typeof data === "string" ? JSON.parse(data) : data;
-        totalData = parsedData;
-        utils.setTData(totalData)
+        window.electronAPI.setGlobalData(parsedData)
+
     }
     catch{
         console.error("error getting db data");
     }
-    UpdatePageData(totalData);
+    UpdatePageData()
     SetButtonListeners();
-    console.log(utils.tData);
 })
 
-function UpdatePageData(data){
-    UpdateHeader(utils.tData.dbName)
-    utils.UpdateTablesOverview(data.tablesOverview)
+function UpdatePageData(){
+    UpdateHeader(utils.dbData.dbName)
+    utils.UpdateTablesOverview()
 }
 
 function UpdateHeader(dbName){
@@ -47,7 +45,7 @@ function SetButtonListeners(){
     cs.addEventListener("click", resetSearch);
     sLLM.addEventListener("click", StartLLM);
     cLLM.addEventListener("click", CloseLLM);
-    opg.addEventListener("click", OpenPromptWindow);
+    opg.addEventListener("click", window.electronAPI.openPromptWindow);
     search.addEventListener("click", SendSearch);
 }
 
@@ -56,30 +54,32 @@ function SetButtonListeners(){
 function ShowResults() {
     let data = {}
 
+    console.log("isSearch:\t", isSearch)
+
     if (isSearch)
     {
         data = {
-            results: sResults.results.results,
-            schema: schemaData,
+            table: searchedTable,
             isSearch: isSearch
         };
-
+        console.log("Data Sending:\n",data)
         window.electronAPI.openResults(data);
         return
     }
-    
-    console.log(utils.tData.tableSchema[utils.selectedTable])
-    schemaData = Object.values(utils.tData.tableSchema[utils.selectedTable])
-                              .map(item => item.ColName);
-    
 
+    if(!utils.selectedTable ){
+        alert("Select Table To View")
+        return
+    }
+    schemaData = Object.values(utils.dbData.tableSchema[utils.selectedTable])
+                        .map(item => item.ColName);
 
     data = {
-            results: utils.tData.top20[utils.selectedTable],
+            results: utils.dbData.top20[utils.selectedTable],
             schema: schemaData,
             isSearch: isSearch
     };
-
+    console.log("Data Sending:\n",data)
     window.electronAPI.openResults(data);
 }
 //bulk insert button calls event to open a dialoge box to select the csv and sends the path to backend for insertion.
@@ -90,6 +90,10 @@ async function BulkInsert(){
 
 //sends a simple comp column search query to backend
 async function SendSearch(){
+    if(!utils.selectedColumn){
+        alert("No Comp Column Seleceted")
+        return
+    }
     let data = {}
     const input = document.getElementById("search-input");
     searchValToSend = input.value
@@ -100,8 +104,9 @@ async function SendSearch(){
     };
 
     isSearch = true;
-    sResults = await window.electronAPI.sendSearch(data);
-    
+    searchedTable = data.table
+    await window.electronAPI.sendSearch(data);
+    utils.setData()
 }
 
 //start and close llm button functions
@@ -111,18 +116,6 @@ function StartLLM(){
 
 function CloseLLM(){
     window.electronAPI.closeLLM();
-}
-
-//Opens the prompt window 
-function OpenPromptWindow(){
-
-    data = {
-        tablesOverview: totalData.tablesOverview,
-        tableSchema: totalData.tableSchema,
-        results: sResults
-    }
-
-    window.electronAPI.openPromptWindow(data)
 }
 
 function resetSearch(){
