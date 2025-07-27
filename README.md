@@ -68,16 +68,10 @@ go mod tidy</pre>
 
 ## Continued Development
 
-This project is under active development. New features, bug fixes, and refinements to be released bi-weekly<br><br>Last Update June 10, 2025
-
-- ### Current Development - Planned Release (June 24, 2025)
-    - Fix Concurrency Errors
-    - Create Web Socket Connect
-
 - ### Future Development Plans
     - Display output in frontend instead of backend terminal
     - More Complex Query Generation(ie: between comps, compound clauses, ...)
-    - Automatic sql queries to update based on Select query
+    - Automatic sql queries generation to update based on Select query
     - UI overhaul
 
 ## License
